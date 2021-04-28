@@ -13,33 +13,33 @@ const int y_out = A1;
 RF24 radio(8,10);
 const byte address[6] = "00001";
 
-struct data
+struct dataToSend
 {
   int xAxis;
   int yAxis;
 };
-data send_data;
+dataToSend send_data;
 
 
 // ---------------------------------------- //
-// ---------------- SETUP ----------------- //
+// -                SETUP                 - //
 // ---------------------------------------- //
 void setup() 
 {
-  radio.begin();
-  radio.openWritingPipe(address);
-  radio.setPALevel(RF24_PA_MIN);
-  radio.setDataRate(RF24_250KBPS);
-  radio.stopListening();
+    radio.begin();
+    radio.openWritingPipe(address);
+    radio.setPALevel(RF24_PA_MIN);
+    radio.setDataRate(RF24_250KBPS);
+    radio.stopListening();
 }
 
 
 // ---------------------------------------- //
-// ----------------- LOOP ----------------- //
+// -                LOOP                  - //
 // ---------------------------------------- //
 void loop() 
 {
-  send_data.xAxis = analogRead(x_out);
-  send_data.yAxis = analogRead(y_out);
-  radio.write(&send_data, sizeof(data));
+    send_data.xAxis = analogRead(x_out);
+    send_data.yAxis = analogRead(y_out);
+    radio.write(&send_data, sizeof(dataToSend));
 }

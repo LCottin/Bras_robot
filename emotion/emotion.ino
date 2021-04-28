@@ -31,7 +31,12 @@ Servo wrist_ver; //servo 5, tourne la pince
 Servo gripper;   //servo 6, ouvre/ferme pince
 
 //pour memoriser la positoin de chaque servo
-byte posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince;
+short posBase       = 90;
+short posEpaule     = 95;
+short posCoude      = 95; 
+short posPoignetRot = 90;
+short posPoignetVer = 90;
+short posPince      = 90;
 
 //definition des vitesses
 enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
@@ -63,10 +68,9 @@ struct valeur
 valeur valeurs;
 
 
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
+// ---------------------------------------- //
+// -                SETUP                 - //
+// ---------------------------------------- //
 void setup() 
 {  
     Serial.begin(9600);
@@ -84,13 +88,11 @@ void setup()
     Braccio.begin();  
     delay(1000);
     Braccio.positionDroite();
-  
-    init1();
-  
+
     Serial.print(__FILE__);
     Serial.println(" Prêt !");
 
-/* ---------------------------------- METTRE LE CODE A EFFECTUER ICI ----------------------------------------*/
+ //---------------------------------- METTRE LE CODE A EFFECTUER ICI ----------------------------------------//
    
     surprise();
     delay(3000);
@@ -98,16 +100,21 @@ void setup()
 
 
 
-/* -------------------------------------------------------------------------------------------------------------- */
+  // ----------------------------------------------------------------------------------------------------------- //
 }    
 
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
+
+// ---------------------------------------- //
+// -                 LOOP                 - //
+// ---------------------------------------- //
 void loop() 
 {
 }
 
+
+// ---------------------------------------- //
+// -      REINITIALISE LES POSITIONS      - //
+// ---------------------------------------- //
 void init1()
 {
     posBase       = 90;
@@ -116,133 +123,136 @@ void init1()
     posPoignetRot = 90;
     posPoignetVer = 90;
     posPince      = 90;
+
 }
 
+
+// ---------------------------------------- //
+// -           FONCTION DE TEST           - //
+// ---------------------------------------- //
 void test1()
 {
-  vitesse = T_LENT;
-  Serial.println("Changement");
-                      init1();
-                      mainOuverte(vitesse);
-                      delay(500);
-                      mainFermee(vitesse);
-                      delay(500);
-                      Braccio.positionDroite();
-                      tournerMain(0, vitesse);
-                      delay(500);
-                      tournerMain(180, vitesse);
-                      delay(500);
-                      tournerMain(90, vitesse);
-                      delay(500);
-                    
-                      leverMain(20, vitesse);
-                      delay(500);
-                      tournerMain(0, vitesse);
-                      delay(500);
-                      leverMain(90, vitesse);
-                      delay(500);
-                    
-                      tournerCoude(20, vitesse);
-                      leverMain(180, vitesse);
-                      Braccio.positionDroite();
-                      tournerBase(60, vitesse);
-                      delay(500);
-                    
-                      delay(1000);
-                      Braccio.positionDroite();
+    vitesse = T_LENT;
+    Serial.println("Changement");
+    init1();
+    Braccio.mainOuverte(vitesse);
+    delay(500);
+    Braccio.mainFermee(vitesse);
+    delay(500);
+    Braccio.positionDroite();
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.tournerMain(180, vitesse);
+    delay(500);
+    Braccio.tournerMain(90, vitesse);
+    delay(500);
+  
+    Braccio.leverMain(20, vitesse);
+    delay(500);
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.leverMain(90, vitesse);
+    delay(500);
+  
+    Braccio.tournerCoude(20, vitesse);
+    Braccio.leverMain(180, vitesse);
+    Braccio.positionDroite();
+    Braccio.tournerBase(60, vitesse);
+    delay(500);
+  
+    delay(1000);
+    Braccio.positionDroite();
 
-                      delay(1000);
-      vitesse = MOYEN;
-                      init1();
-                      mainOuverte(vitesse);
-                      delay(500);
-                      mainFermee(vitesse);
-                      Braccio.positionDroite();
-                      tournerMain(0, vitesse);
-                      delay(500);
-                      tournerMain(180, vitesse);
-                      delay(500);
-                      tournerMain(90, vitesse);
-                      delay(500);
-                    
-                      leverMain(20, vitesse);
-                      delay(500);
-                      tournerMain(0, vitesse);
-                      delay(500);
-                      leverMain(90, vitesse);
-                      delay(500);
-                    
-                      tournerCoude(20, vitesse);
-                      leverMain(180, vitesse);
-                      Braccio.positionDroite();
-                      tournerBase(60, vitesse);
-                      delay(500);
-                    
-                      delay(2000);
-                      Braccio.positionDroite();
-                      delay(2000);
+    delay(1000);
+    vitesse = MOYEN;
+    init1();
+    Braccio.mainOuverte(vitesse);
+    delay(500);
+    Braccio.mainFermee(vitesse);
+    Braccio.positionDroite();
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.tournerMain(180, vitesse);
+    delay(500);
+    Braccio.tournerMain(90, vitesse);
+    delay(500);
+  
+    Braccio.leverMain(20, vitesse);
+    delay(500);
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.leverMain(90, vitesse);
+    delay(500);
+  
+    Braccio.tournerCoude(20, vitesse);
+    Braccio.leverMain(180, vitesse);
+    Braccio.positionDroite();
+    Braccio.tournerBase(60, vitesse);
+    delay(500);
+  
+    delay(2000);
+    Braccio.positionDroite();
+    delay(2000);
 
   
-vitesse = T_RAPIDE;
-  Serial.println("Changement");
-                      init1();
-                      mainOuverte(vitesse);
-                      delay(500);
-                      mainFermee(vitesse);
-                      delay(500);
-                      Braccio.positionDroite();
-                      tournerMain(0, vitesse);
-                      delay(500);
-                      tournerMain(180, vitesse);
-                      delay(500);
-                      tournerMain(90, vitesse);
-                      delay(500);
-                    
-                      leverMain(20, vitesse);
-                      delay(500);
-                      tournerMain(0, vitesse);
-                      delay(500);
-                      leverMain(90, vitesse);
-                      delay(500);
-                    
-                      tournerCoude(20, vitesse);
-                      leverMain(180, vitesse);
-                      Braccio.positionDroite();
-                      tournerBase(60, vitesse);
-                      delay(500);
-                    
-                      delay(3000);
-                      Braccio.positionDroite();
+    vitesse = T_RAPIDE;
+    Serial.println("Changement");
+    init1();
+    Braccio.mainOuverte(vitesse);
+    delay(500);
+    Braccio.mainFermee(vitesse);
+    delay(500);
+    Braccio.positionDroite();
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.tournerMain(180, vitesse);
+    delay(500);
+    Braccio.tournerMain(90, vitesse);
+    delay(500);
+  
+    Braccio.leverMain(20, vitesse);
+    delay(500);
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.leverMain(90, vitesse);
+    delay(500);
+  
+    Braccio.tournerCoude(20, vitesse);
+    Braccio.leverMain(180, vitesse);
+    Braccio.positionDroite();
+    Braccio.tournerBase(60, vitesse);
+    delay(500);
+  
+    delay(3000);
+    Braccio.positionDroite();
 }
 
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/**
- * EMOTION : COLERE
- */
+
+// ---------------------------------------- //
+// -           EMOTION : COLERE           - //
+// ---------------------------------------- //
 void colere()
 {
     tempsDebut = millis();
     vitesse = MOYEN;
   
-    tournerEpaule(150, MOYEN);
+    Braccio.tournerEpaule(150, MOYEN);
     delay(10);
     Braccio.ServoMovement(vitesse, posBase, 90, 20, 180, posPoignetVer, posPince);
     delay(20);
-    leverMain(115, vitesse);
+    Braccio.leverMain(115, vitesse);
     delay(10);
   
     for (i = 0; i< 3; i++)
     {
-        mainOuverte(vitesse);
+        Braccio.mainOuverte(vitesse);
         delay(10);
-        mainFermee(vitesse);
+        Braccio.mainFermee(vitesse);
         delay(10);
     }
-    ouvrirPince(90, vitesse);
+    Braccio.ouvrirPince(90, vitesse);
     
-    tournerEpaule(30, vitesse);
+    Braccio.tournerEpaule(30, vitesse);
     delay(10);
     Braccio.ServoMovement(vitesse, posBase, 140, 95, 95, 90, 90);
     delay(30);
@@ -253,53 +263,53 @@ void colere()
     Braccio.ServoMovement(vitesse, 120, 30, 90, 90, 90, 90);
     delay(100);
   
-    tournerEpaule(160, vitesse);
+    Braccio.tournerEpaule(160, vitesse);
     delay(10);
-    leverMain(150, vitesse);
+    Braccio.leverMain(150, vitesse);
     delay(50);
     Braccio.ServoMovement(vitesse, posBase, 140, 95, 95, 90, 90);
   
-    tournerEpaule(95, vitesse);
+    Braccio.tournerEpaule(95, vitesse);
     delay(10);
-    tournerCoude(95, vitesse);
+    Braccio.tournerCoude(95, vitesse);
     delay(10);
-    leverMain(10, vitesse);
+    Braccio.leverMain(10, vitesse);
     delay(10);
   
     for (i = 0; i < 4; i++)
     {
         if (i%2)
         {
-            tournerBase(10, vitesse);
+            Braccio.tournerBase(10, vitesse);
             delay(10);
-            mainFermee(vitesse);
+            Braccio.mainFermee(vitesse);
             delay(10);
-            leverMain(80, vitesse);
+            Braccio.leverMain(80, vitesse);
             delay(100);
         }
     
         else 
         {
-            tournerBase(160, vitesse);
+            Braccio.tournerBase(160, vitesse);
             delay(10);
-            mainOuverte(vitesse);
+            Braccio.mainOuverte(vitesse);
             delay(10);
-            leverMain(60, vitesse);
+            Braccio.leverMain(60, vitesse);
             delay(100);
         }
     
         delay(50);
     }
   
-    tournerBase(90, LENT);
+    Braccio.tournerBase(90, LENT);
     delay(10);
-    mainFermee(MOYEN);
+    Braccio.mainFermee(MOYEN);
     delay(10);
-    tournerEpaule(60, LENT);
+    Braccio.tournerEpaule(60, LENT);
     delay(10);
-    tournerCoude(170, LENT);
+    Braccio.tournerCoude(170, LENT);
     delay(10);
-    leverMain(20, LENT);
+    Braccio.leverMain(20, LENT);
     delay(100);
   
     Braccio.ServoMovement(RAPIDE, posBase, 70, 70, 60, 90, 90);
@@ -314,27 +324,25 @@ void colere()
     Serial.println("s");
 }
 
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/**
- * EMOTION : JOIE
- */
+
+// ---------------------------------------- //
+// -            EMOTION : JOIE            - //
+// ---------------------------------------- //
 void joie()
 {
     tempsDebut = millis();
     vitesse = RAPIDE;
   
-    tournerEpaule(140, MOYEN);
+    Braccio.tournerEpaule(140, MOYEN);
     delay(100);
-    tournerCoude(40, vitesse);
+    Braccio.tournerCoude(40, vitesse);
     delay(100);
   
     for (i = 0; i < 4; i++)
     {
-        leverMain(150, vitesse);
+        Braccio.leverMain(150, vitesse);
         delay(50);
-        leverMain(40, vitesse);
+        Braccio.leverMain(40, vitesse);
         delay(50);
     }
 
@@ -342,8 +350,8 @@ void joie()
     Braccio.positionDroite();
     return;
   
-    leverMain(90, vitesse);
-    tournerBase(170, RAPIDE);
+    Braccio.leverMain(90, vitesse);
+    Braccio.tournerBase(170, RAPIDE);
     Braccio.ServoMovement(RAPIDE, 170, posEpaule, posCoude, 90, posPoignetVer, posPince);
     delay(50);
     Braccio.ServoMovement(RAPIDE, 30, posEpaule, posCoude, 40, posPoignetVer, posPince);
@@ -351,50 +359,50 @@ void joie()
   
     for (i = 0; i < 2; i++)
     {
-        tournerBase(150, RAPIDE);
+        Braccio.tournerBase(150, RAPIDE);
         delay(25);
-        tournerEpaule(60, MOYEN);
+        Braccio.tournerEpaule(60, MOYEN);
         delay(25);
-        tournerCoude(150, vitesse);
+        Braccio.tournerCoude(150, vitesse);
         delay(250);
-        leverMain(60, vitesse);
+        Braccio.leverMain(60, vitesse);
         delay(25);
       
-        tournerBase(40, RAPIDE);
+        Braccio.tournerBase(40, RAPIDE);
         delay(25);
-        leverMain(110, vitesse);
+        Braccio.leverMain(110, vitesse);
         delay(250);
-        tournerCoude(40, vitesse);
+        Braccio.tournerCoude(40, vitesse);
         delay(25);
-        tournerEpaule(130, MOYEN);
+        Braccio.tournerEpaule(130, MOYEN);
         delay(25);
     }
   
-    tournerBase(90, vitesse);
-    tournerEpaule(140, MOYEN);
+    Braccio.tournerBase(90, vitesse);
+    Braccio.tournerEpaule(140, MOYEN);
     delay(25);
-    tournerCoude(40, RAPIDE);
+    Braccio.tournerCoude(40, RAPIDE);
     delay(25);
   
     for (i = 0; i < 3; i++)
     {
-        mainOuverte(RAPIDE);
+        Braccio.mainOuverte(RAPIDE);
         delay(50);
-        mainFermee(RAPIDE);
+        Braccio.mainFermee(RAPIDE);
         delay(50);
     }
   
-    ouvrirPince(90, MOYEN);
+    Braccio.ouvrirPince(90, MOYEN);
   
     for (i = 0; i < 3; i++)
     {
-        tournerBase(40, RAPIDE);
+        Braccio.tournerBase(40, RAPIDE);
         delay(20);
-        tournerBase(140, RAPIDE);
+        Braccio.tournerBase(140, RAPIDE);
         delay(20);
     }
   
-    tournerBase(90, vitesse);
+    Braccio.tournerBase(90, vitesse);
     delay(200);
   
     for(i = 0; i < 2; i++)
@@ -416,180 +424,74 @@ void joie()
     Serial.println("s");
 }
 
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/**
- * EMOTION : SURPRISE
- */
+
+// ---------------------------------------- //
+// -          EMOTION : SURPRISE          - //
+// ---------------------------------------- //
 void surprise()
 {
-  tempsDebut = millis();
-  vitesse = LENT;
+    tempsDebut = millis();
+    vitesse = LENT;
+    
+    Braccio.positionDroite();
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.tournerMain(180, vitesse);
+    delay(500);
+    Braccio.tournerMain(90, vitesse);
+    delay(500);
   
-  Braccio.positionDroite();
-  tournerMain(0, vitesse);
-  delay(500);
-  tournerMain(180, vitesse);
-  delay(500);
-  tournerMain(90, vitesse);
-  delay(500);
-
-  leverMain(20, vitesse);
-  delay(500);
-  tournerMain(0, vitesse);
-  delay(500);
-  leverMain(90, vitesse);
-  delay(500);
-
-  tournerCoude(20, vitesse);
-  leverMain(180, vitesse);
-  Braccio.positionDroite();
-  tournerBase(60, vitesse);
-  delay(500);
-
-  Braccio.positionDroite();
-  delay(500);
-  mainOuverte(T_RAPIDE);
-  delay(500);
-  mainFermee(MOYEN);
-
-  delay(1000);
-  Braccio.positionDroite();
-
-  tempsFin = millis();
-  duree = tempsFin - tempsDebut;
-  Serial.print("Temps d'execution de surprise = ");
-  Serial.print(duree/1000);
-  Serial.println("s");
+    Braccio.leverMain(20, vitesse);
+    delay(500);
+    Braccio.tournerMain(0, vitesse);
+    delay(500);
+    Braccio.leverMain(90, vitesse);
+    delay(500);
+  
+    Braccio.tournerCoude(20, vitesse);
+    Braccio.leverMain(180, vitesse);
+    Braccio.positionDroite();
+    Braccio.tournerBase(60, vitesse);
+    delay(500);
+  
+    Braccio.positionDroite();
+    delay(500);
+    Braccio.mainOuverte(T_RAPIDE);
+    delay(500);
+    Braccio.mainFermee(MOYEN);
+  
+    delay(1000);
+    Braccio.positionDroite();
+  
+    tempsFin = millis();
+    duree = tempsFin - tempsDebut;
+    Serial.print("Temps d'execution de surprise = ");
+    Serial.print(duree/1000);
+    Serial.println("s");
 }
 
 
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* FAIT LA VAGUE EN PARTANT DE LA POSITION DROITE */
+// ---------------------------------------- //
+// -           MOUVEMENT : VAGUE          - //
+// ---------------------------------------- //
 void vague()
 {
-  const byte vitesse = T_RAPIDE;
-  Braccio.positionDroite();
-
-  posCoude = 135;
-  posPoignetRot = 180;
-  Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-
-  byte i = posCoude;
-  byte j = posPoignetRot;
-  posCoude = 180;
-  posPoignetRot = 40;
-  while ( i < posCoude || j > posPoignetRot)
-  {
-    //delay(100);
-    i++; 
-    j--;
-    Braccio.ServoMovement(vitesse, posBase, posEpaule, i, j, posPoignetVer, posPince);
-    
-  }
+    const byte vitesse = T_RAPIDE;
+    Braccio.positionDroite();
+  
+    posCoude = 135;
+    posPoignetRot = 180;
+    Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+  
+    byte i = posCoude;
+    byte j = posPoignetRot;
+    posCoude = 180;
+    posPoignetRot = 40;
+    while ( i < posCoude || j > posPoignetRot)
+    {
+        //delay(100);
+        i++; 
+        j--;
+        Braccio.ServoMovement(vitesse, posBase, posEpaule, i, j, posPoignetVer, posPince);
+    }
 }
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------- */
-/* TOURNE LA BASE */
-void tournerBase(byte valeurAngle, const byte vitesse)
-{
-  if (valeurAngle < 0)    valeurAngle = 0;
-  if (valeurAngle > 180)  valeurAngle = 180;
-  posBase = valeurAngle;
-  Braccio.ServoMovement(vitesse, valeurAngle, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------- */
-/* TOURNE L'EPAULE */
-void tournerEpaule(byte valeurAngle, const byte vitesse)
-{
-  if (valeurAngle < 20)    valeurAngle = 20;
-  if (valeurAngle > 160)   valeurAngle = 160;
-  posEpaule = valeurAngle;
-  Braccio.ServoMovement(vitesse, posBase, valeurAngle, posCoude, posPoignetRot, posPoignetVer, posPince);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------- */
-/* TOURNE LE COUDE */
-void tournerCoude(byte valeurAngle, const byte vitesse)
-{
-  if (valeurAngle < 0)    valeurAngle = 0;
-  if (valeurAngle > 180)  valeurAngle = 180;
-  posCoude = valeurAngle;
-  Braccio.ServoMovement(vitesse, posBase, posEpaule, valeurAngle, posPoignetRot, posPoignetVer, posPince);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------- */
-/* LEVE LA MAIN */
-void leverMain(byte valeurAngle, const byte vitesse)
-{
-  if (valeurAngle < 0)    valeurAngle = 0;
-  if (valeurAngle > 180)  valeurAngle = 180;
-  posPoignetRot = valeurAngle;
-  Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, valeurAngle, posPoignetVer, posPince);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------- */
-/* TOURNE LA MAIN */
-void tournerMain(byte valeurAngle, const byte vitesse)
-{
-  if (valeurAngle < 0)    valeurAngle = 0;
-  if (valeurAngle > 180)  valeurAngle = 180;
-  posPoignetVer = valeurAngle;
-  Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, valeurAngle, posPince);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------- */
-/* OUVRE LA PINCE */
-void ouvrirPince(byte valeurAngle, const byte vitesse)
-{
-  if (valeurAngle < 25)    valeurAngle = 25;
-  if (valeurAngle > 90)    valeurAngle = 90;
-  posPince = valeurAngle;
-  Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, valeurAngle);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/**
- * OUVRE LA MAIN EN GRAND
- */
- void mainOuverte(const byte vitesse)
-{
-  posPince = 90;
-  ouvrirPince(posPince, vitesse);
-}
-
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/* ---------------------------------------- */
-/**
- * FERME LA MAIN
- */
- void mainFermee(const byte vitesse)
- {
-  posPince = 25;
-  ouvrirPince(posPince, vitesse);
- }

@@ -51,14 +51,69 @@ public:
   /**
    * This function allow the user to control all the servo motors in the Braccio
    */
-  int ServoMovement(int delay, int Vbase,int Vshoulder, int Velbow, int Vwrist_ver, int Vwrist_rot, int Vgripper); 
+  void ServoMovement(int delay, int Vbase,int Vshoulder, int Velbow, int Vwrist_ver, int Vwrist_rot, int Vgripper); 
 	
   /* Tests the arm around all directions */
   void testAmplitude();
 
   /* This function makes the arm stands */
   void positionDroite();
+
+  /**
+   * Makes the basement turns 
+   * @param valeurAngle New angle of the basement
+   * @param vitesse Speed of the movement
+   */
+  void tournerBase(short valeurAngle, const byte vitesse);
   
+  /**
+   * Makes the shoulder turns 
+   * @param valeurAngle New angle of the shoulder
+   * @param vitesse Speed of the movement
+   */
+  void tournerEpaule(short valeurAngle, const byte vitesse);
+
+  /**
+   * Makes the elbow turns 
+   * @param valeurAngle New angle of the elbow
+   * @param vitesse Speed of the movement
+   */
+  void tournerCoude(short valeurAngle, const byte vitesse);
+
+  /**
+   * Makes the hand rises 
+   * @param valeurAngle New angle of the hand
+   * @param vitesse Speed of the movement
+   */
+  void leverMain(short valeurAngle, const byte vitesse);
+
+  /**
+   * Makes the hand turns 
+   * @param valeurAngle New angle of the hand
+   * @param vitesse Speed of the movement
+   */
+  void tournerMain(short valeurAngle, const byte vitesse);
+
+  /**
+   * Makes the hand opens
+   * @param valeurAngle New angle of the hand
+   * @param vitesse Speed of the movement
+   */
+  void ouvrirPince(short valeurAngle, const byte vitesse);
+
+  /**
+   * Makes the hand fully opened
+   * @param vitesse Speed of the movement
+   */
+  void mainOuverte(const byte vitesse);
+
+  /**
+   * Makes the hand fully closed
+   * @param vitesse Speed of the movement
+   */
+  void mainFermee(const byte vitesse);
+
+
 private:
   /*
   * This function, used only with the Braccio Shield V4 and greater,

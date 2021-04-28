@@ -24,13 +24,19 @@ extern Servo wrist_rot;
 extern Servo wrist_ver;
 extern Servo gripper;
 
-extern int step_base = 90;
-extern int step_shoulder = 90;
-extern int step_elbow = 90;
-extern int step_wrist_rot = 90;
-extern int step_wrist_ver = 90;
-extern int step_gripper = 73;
- 
+int step_base = 90;
+int step_shoulder = 90;
+int step_elbow = 90;
+int step_wrist_rot = 90;
+int step_wrist_ver = 90;
+int step_gripper = 73;
+
+extern short posBase; 
+extern short posEpaule; 
+extern short posCoude; 
+extern short posPoignetRot; 
+extern short posPoignetVer; 
+extern short posPince;
 
 _Braccio Braccio;
 
@@ -38,12 +44,12 @@ _Braccio Braccio;
 _Braccio::_Braccio() {}
 
 /**
- * Braccio initialization and set initial position
- * Modifing this function you can set up the initial position of all the
- * servo motors of Braccio
- * @param soft_start_level: default value is 0 (SOFT_START_DEFAULT)
- * You should set begin(SOFT_START_DISABLED) if you are using the Arm Robot shield V1.6
- * SOFT_START_DISABLED disable the Braccio movements
+	 * Braccio initialization and set initial position
+	 * Modifing this function you can set up the initial position of all the
+	 * servo motors of Braccio
+	 * @param soft_start_level: default value is 0 (SOFT_START_DEFAULT)
+	 * You should set begin(SOFT_START_DISABLED) if you are using the Arm Robot shield V1.6
+	 * SOFT_START_DISABLED disable the Braccio movements
  */
 unsigned int _Braccio::begin(int soft_start_level) 
 {
@@ -84,10 +90,10 @@ unsigned int _Braccio::begin(int soft_start_level)
 	return 1;
 }
 
-/*
-Software implementation of the PWM for the SOFT_START_CONTROL_PIN,HIGH
-@param high_time: the time in the logic level high
-@param low_time: the time in the logic level low
+/**
+	Software implementation of the PWM for the SOFT_START_CONTROL_PIN,HIGH
+	@param high_time: the time in the logic level high
+	@param low_time: the time in the logic level low
 */
 void _Braccio::_softwarePWM(int high_time, int low_time)
 {
@@ -97,11 +103,11 @@ void _Braccio::_softwarePWM(int high_time, int low_time)
 	delayMicroseconds(low_time); 
 }
 
-/*
-* This function, used only with the Braccio Shield V4 and greater,
-* turn ON the Braccio softly and save it from brokes.
-* The SOFT_START_CONTROL_PIN is used as a software PWM
-* @param soft_start_level: the minimum value is -70, default value is 0 (SOFT_START_DEFAULT)
+/**
+	* This function, used only with the Braccio Shield V4 and greater,
+	* turn ON the Braccio softly and save it from brokes.
+	* The SOFT_START_CONTROL_PIN is used as a software PWM
+	* @param soft_start_level: the minimum value is -70, default value is 0 (SOFT_START_DEFAULT)
 */
 void _Braccio::_softStart(int soft_start_level)
 {      
@@ -126,7 +132,7 @@ void _Braccio::_softStart(int soft_start_level)
  * @param vWrist_rot next wrist vertical servo motor degree
  * @param vgripper 	 next gripper servo motor degree
  */
-int _Braccio::ServoMovement(int stepDelay, int vBase, int vShoulder, int vElbow,int vWrist_ver, int vWrist_rot, int vgripper) 
+void _Braccio::ServoMovement(int stepDelay, int vBase, int vShoulder, int vElbow,int vWrist_ver, int vWrist_rot, int vgripper) 
 {
 	// Check values, to avoid dangerous positions for the Braccio
     if (stepDelay > 30) 	stepDelay = 30;
@@ -250,6 +256,9 @@ int _Braccio::ServoMovement(int stepDelay, int vBase, int vShoulder, int vElbow,
 	}
 }
 
+/**
+ * Puts the arm straight
+ */
 void _Braccio::positionDroite()
 {
 	delay(100);
@@ -257,6 +266,9 @@ void _Braccio::positionDroite()
 	delay(100);
 }
 
+/**
+ * Makes every servomotor turn to show their amplitude
+ */
 void _Braccio::testAmplitude()
 {
 		//rotation de la base
@@ -299,4 +311,65 @@ void _Braccio::testAmplitude()
 	{
 		ServoMovement(30,         90, 95, 95, 90, 90,  i);
 	} 
+}
+
+void _Braccio::tournerBase(short valeurAngle, const byte vitesse)
+{
+	if (valeurAngle < 0)    valeurAngle = 0;
+  	if (valeurAngle > 180)  valeurAngle = 180;
+  	posCoude = valeurAngle;
+  	ServoMovement(vitesse, valeurAngle, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+}
+
+
+void _Braccio::tournerEpaule(short valeurAngle, const byte vitesse)
+{
+	if (valeurAngle < 20)    valeurAngle = 20;
+	if (valeurAngle > 160)   valeurAngle = 160;
+	posEpaule = valeurAngle;
+	ServoMovement(vitesse, posBase, valeurAngle, posCoude, posPoignetRot, posPoignetVer, posPince);
+}
+
+void _Braccio::tournerCoude(short valeurAngle, const byte vitesse)
+{
+	if (valeurAngle < 0)    valeurAngle = 0;
+	if (valeurAngle > 180)  valeurAngle = 180;
+	posCoude = valeurAngle;
+	ServoMovement(vitesse, posBase, posEpaule, valeurAngle, posPoignetRot, posPoignetVer, posPince);
+}
+
+void _Braccio::leverMain(short valeurAngle, const byte vitesse)
+{
+	if (valeurAngle < 0)    valeurAngle = 0;
+	if (valeurAngle > 180)  valeurAngle = 180;
+	posPoignetRot = valeurAngle;
+	ServoMovement(vitesse, posBase, posEpaule, posCoude, valeurAngle, posPoignetVer, posPince);
+}
+
+void _Braccio::tournerMain(short valeurAngle, const byte vitesse)
+{
+	if (valeurAngle < 0)    valeurAngle = 0;
+	if (valeurAngle > 180)  valeurAngle = 180;
+	posPoignetVer = valeurAngle;
+  ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, valeurAngle, posPince);
+}
+
+void _Braccio::ouvrirPince(short valeurAngle, const byte vitesse)
+{
+	if (valeurAngle < 25)    valeurAngle = 25;
+	if (valeurAngle > 90)    valeurAngle = 90;
+	posPince = valeurAngle;
+ 	ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, valeurAngle);
+}
+
+void _Braccio::mainOuverte(const byte vitesse)
+{
+	posPince = 90;
+	ouvrirPince(posPince, vitesse);
+}
+
+void _Braccio::mainFermee(const byte vitesse)
+{
+	posPince = 25;
+	ouvrirPince(posPince, vitesse);
 }

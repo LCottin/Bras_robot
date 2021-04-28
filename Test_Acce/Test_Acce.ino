@@ -13,12 +13,14 @@
 
 const int x_out = A0;
 const int y_out = A1;
+
 RF24 radio(8,10);
+
 const byte address[6] = "00001";
-struct data{
+struct data
+{
   int xAxis;
   int yAxis;
-
 };
 data send_data;
 
@@ -34,9 +36,12 @@ int V1_MAX = -1000;
 int V2_MIN = 1000;
 int V2_MAX = -1000;
 
+
+// ---------------------------------------- //
+// ---------------- SETUP ----------------- //
+// ---------------------------------------- //
 void setup() 
 {
-  // put your setup code here, to run once:
   Serial.begin(9600);
   radio.begin();
   radio.openWritingPipe(address);
@@ -57,7 +62,7 @@ void setup()
     Y_MIN = send_data.xAxis < Y_MIN ? send_data.xAxis : Y_MIN;
     Y_MAX = send_data.xAxis > Y_MAX ? send_data.xAxis : Y_MAX;
 
-    V0_MIN = 
+    //V0_MIN = 
     Serial.println(i);
     
     delay(50);
@@ -69,6 +74,10 @@ void setup()
   Serial.print("Y_MAX = "); Serial.println(Y_MAX);
 }
 
+
+// ---------------------------------------- //
+// ----------------- LOOP ----------------- //
+// ---------------------------------------- //
 void loop() 
 {
   Serial.print("X = "); Serial.println(analogRead(x_out));

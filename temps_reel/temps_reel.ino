@@ -91,7 +91,7 @@ void loop()
 {
     miseEnForme();
     Braccio.tournerCoude(pos[0], MOYEN);
-    delay(200);
+    delay(1000);
 }
 
 
@@ -100,23 +100,22 @@ void loop()
 // ---------------------------------------- //
 void miseEnForme()
 {
-    int x_min = 20;
-    int x_max = 1000;
-
+    int dx = 15;
+    
     short lectureX = analogRead(A0);
     short lectureY = analogRead(A1);
     short lectureZ = analogRead(A2);
 
-    if ( lectureX < x_min) lectureX = x_min;
-    if ( lectureX > x_max) lectureX = x_max;
+    //if ( lectureX < x_min) lectureX = x_min;
+    //if ( lectureX > x_max) lectureX = x_max;
   
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
     Serial.print("Z = "); Serial.println(lectureZ);
     
-    pos[0] = map(lectureX + 80, 0, 2047, 10, 170);
-    pos[1] = map(lectureY, 0, 2047, 10, 170);
-    pos[2] = map(lectureZ, 0, 2047, 10, 170);
+    pos[0] = dx + map(lectureX, 0, 790, 0, 180);
+    pos[1] = map(lectureY, 0, 1023, 10, 170);
+    pos[2] = map(lectureZ, 0, 1023, 10, 170);
   
     Serial.print("X envoyé = "); Serial.println(pos[0]);
     Serial.print("Y envoyé = "); Serial.println(pos[1]);

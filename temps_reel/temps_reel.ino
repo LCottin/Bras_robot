@@ -5,11 +5,6 @@
 #include "Braccio.h"
 //#include <Servo.h>
 
-//bibliothèques pour la comminucation sans fils
-#include <SPI.h>
-#include <nRF24L01.h>
-#include <RF24.h>
-
  /*
    Step Delay: un délai en millisecondes entre le mouvement de chaque servo. Valeurs autorisées
    de 10 à 30 ms.
@@ -47,10 +42,6 @@ unsigned long tempsDebut, tempsFin;
 double duree;
 byte i = 0;
 
-//Pour la module SF
-RF24 radio(7, 8);
-const byte adresse[6] = "00001";
-
 struct VMAX
 {
   const int XMIN = 291;
@@ -82,15 +73,6 @@ void setup()
     Serial.begin(9600);
     Serial.print("Initialisation de ");
     Serial.println(__FILE__);
-  
-    /* ROUTINE POUR LA SF */
-    /*
-    radio.begin();
-    radio.openReadingPipe(0, adresse);
-    radio.setPALevel(RF24_PA_MAX);
-    radio.setDataRate(RF24_2MBPS);
-    radio.startListening();
-    */
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -118,15 +100,21 @@ void loop()
 // ---------------------------------------- //
 void miseEnForme()
 {
+    int x_min = 20;
+    int x_max = 1000;
+
     short lectureX = analogRead(A0);
     short lectureY = analogRead(A1);
     short lectureZ = analogRead(A2);
+
+    if ( lectureX < x_min) lectureX = x_min;
+    if ( lectureX > x_max) lectureX = x_max;
   
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
     Serial.print("Z = "); Serial.println(lectureZ);
     
-    pos[0] = map(lectureX, 0, 2047, 10, 170);
+    pos[0] = map(lectureX + 80, 0, 2047, 10, 170);
     pos[1] = map(lectureY, 0, 2047, 10, 170);
     pos[2] = map(lectureZ, 0, 2047, 10, 170);
   

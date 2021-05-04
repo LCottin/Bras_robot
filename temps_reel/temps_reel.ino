@@ -13,7 +13,7 @@
    M3=elbow degrees.           Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
    M4=wrist vertical degrees.  Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
    M5=wrist rotation degrees.  Valeurs autorisées de 0 à 180 degrés
-   M6=gripper degrees.         Valeurs autorisées de 10 à 90 degrés. 
+   M6=gripper degrees.         Valeurs autorisées de 25 à 90 degrés. 
       - 10: la pince est ouverte, 
       - 90: la pince est fermée.
   */
@@ -25,7 +25,7 @@ Servo wrist_rot; //servo 4, baisse/monte la pince
 Servo wrist_ver; //servo 5, tourne la pince
 Servo gripper;   //servo 6, ouvre/ferme pince
 
-//pour memoriser la positoin de chaque servo
+//pour memoriser la position de chaque servo
 short posBase       = 90;
 short posEpaule     = 95;
 short posCoude      = 95; 
@@ -36,22 +36,41 @@ short posPince      = 90;
 //definition des vitesses
 enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
 
-struct VMAX
-{
-  const int XMIN = 80;
-  const int XMAX = 975;
-  const int XMOY = (XMIN + XMAX) / 2;
-  
-  const int YMIN = 45; 
-  const int YMAX = 975;
-  const int YMOY = (YMIN + YMAX) / 2;
-  
-  const int ZMIN = 286;
-  const int ZMAX = 442;
-};
-VMAX V_MAX;
+//pin pour différencier la provenance des données
+byte pin = 4;
 
-int pos[3];
+//Valeurs extremes recues en analogread pour la radio 1
+struct V_MAX1
+{
+    const short XMIN = 80;
+    const short XMAX = 975;
+    const short XMOY = (XMIN + XMAX) / 2;
+    
+    const short YMIN = 45; 
+    const short YMAX = 975;
+    const short YMOY = (YMIN + YMAX) / 2;
+    
+    const short ZMIN = 286;
+    const short ZMAX = 442;
+    const short ZMOY = (ZMIN + ZMAX) / 2;
+} V_MAX1; 
+
+//Valeurs extremes recues en analogread pour la radio 2
+struct V_MAX2
+{
+    const short XMIN = 10;
+    const short XMAX = 935;
+    const short XMOY = (V_MAX2.XMIN + V_MAX2.XMAX) / 2;
+  
+    const short YMIN = 0;
+    const short YMAX = 830;
+    const short YMOY = (V_MAX2.YMIN + V_MAX2.YMAX) / 2;
+  
+    const short ZMIN = 0;
+    const short ZMAX = 860;
+    const short ZMOY = (V_MAX2.ZMIN + V_MAX2.ZMAX) / 2;
+} V_MAX2;
+
 
 // ---------------------------------------- //
 // -                 SETUP                - //
@@ -61,6 +80,7 @@ void setup()
     Serial.begin(9600);
     Serial.print("Initialisation de ");
     Serial.println(__FILE__);
+    pinMode(pin, INPUT);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -71,18 +91,16 @@ void setup()
     Serial.println(" Prêt !");
 }
 
-
 // ---------------------------------------- //
 // -                  LOOP                - //
 // ---------------------------------------- //
 void loop() 
 {
-    byte vitesse = T_RAPIDE;
-    byte latence = 10;
+    const byte vitesse = T_RAPIDE;
+    const byte latence = 40;
     
     miseEnForme();
-    Braccio.tournerCoude(posCoude, vitesse);
-    Braccio.leverMain(posPoignetRot, vitesse);
+    Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
     delay(latence);
 }
 
@@ -92,10 +110,12 @@ void loop()
 // ---------------------------------------- //
 void miseEnForme()
 {
-    short lectureX = analogRead(A0);
-    short lectureY = analogRead(A1);
-    short lectureZ = analogRead(A2);
-
+    //lectures des 4 entrées
+    short lectureX    = analogRead(A0);
+    short lectureY    = analogRead(A1);
+    short lectureZ    = analogRead(A2);
+    int   lecturePin  = digitalRead(pin);
+     
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
     Serial.print("Z = "); Serial.println(lectureZ);
@@ -109,19 +129,42 @@ void miseEnForme()
 
     Serial.print("X envoyé = "); Serial.println(posCoude);
     */
+
+    //si les données sont en provenance de la radio 1
+    if (lecturePin == HIGH)
+    {    
+        //recupere les valeurs émises par la PWM
+        posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
+        posPoignetRot = map(lectureY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
+
+        //sature en cas de valeurs trop importantes pour proteger les moteurs
+        if (posCoude > 180) posCoude = 180;
+        if (posCoude < 0)   posCoude = 0;
     
-    posCoude      = map(lectureX, V_MAX.XMIN, V_MAX.XMAX, 0, 180);
-    posPoignetRot = map(lectureY, V_MAX.YMIN, V_MAX.YMAX, 0, 180);
-
-    if (posCoude > 180) posCoude = 180;
-    if (posCoude < 0)   posCoude = 0;
-
-    if (posPoignetRot > 180) posPoignetRot = 180;
-    if (posPoignetRot < 0)   posPoignetRot = 0;
-  
-    Serial.print("X envoyé = "); Serial.println(posCoude);
-    Serial.print("Y envoyé = "); Serial.println(posPoignetRot);
-
-    Serial.print("\n");
+        if (posPoignetRot > 180) posPoignetRot = 180;
+        if (posPoignetRot < 0)   posPoignetRot = 0;
+      
+        Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
+        Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
     
+        Serial.print("\n");
+    }
+
+    //sinon si les données sont en provenance de la radio 2
+    else if (lecturePin == LOW)
+    {
+        posPoignetVer = map(lectureX, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
+        posPince      = map(lectureY, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
+    
+        if (posPoignetVer > 180) posPoignetVer = 180;
+        if (posPoignetVer < 0)   posPoignetVer = 0;
+    
+        if (posPince > 90) posPince = 90;
+        if (posPince < 25) posPince = 25;
+      
+        Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
+        Serial.print("posPince envoyée      = "); Serial.println(posPince);
+    
+        Serial.print("\n");
+    }
 }

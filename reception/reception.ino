@@ -44,7 +44,6 @@ void setup()
     radio.begin();
     radio.openReadingPipe(0,address);
     radio.setPALevel(RF24_PA_MAX);
-    //radio.setDataRate(RF24_250KBPS);
     radio.setDataRate(RF24_2MBPS);
     radio.startListening();
 }
@@ -81,8 +80,8 @@ void loop()
       Serial.println(zPWM, DEC);
       Serial.println("");
       
-      analogWrite(xPWMpin, xPWM );
-      analogWrite(yPWMpin, yPWM );
-      analogWrite(zPWMpin, zPWM );
+      analogWrite(xPWMpin, xPWM);
+      analogWrite(yPWMpin, yPWM);
+      analogWrite(zPWMpin, zPWM);
   }
 }

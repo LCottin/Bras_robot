@@ -8,32 +8,50 @@
 #include<RF24.h>
 
 RF24 radio(7, 8);
-
 const byte address[6] = "00001";
 
 struct data 
 {
-  int xAxis;
-  int yAxis;
-  int zAxis;
-};
-data receive_data;
+    short xAxis;
+    short yAxis;
+    short zAxis;
+} receive_data;
 
-// à compléter
-int xMin = 260;
-int yMin = 255;
-int zMin = 270;
+//valeurs extremes recues par la radio 1
+struct c_radio1
+{
+    const short xMin = 260;
+    const short yMin = 255;
+    const short zMin = 270;
+    
+    const short xMax = 415;
+    const short yMax = 405;
+    const short zMax = 420;
+} c_radio1;
 
-// à compléter
-int xMax = 415;
-int yMax = 405;
-int zMax = 420;
+//valeurs extremes recues par la radio 2
+struct c_radio2
+{
+    const short xMin = 280;
+    const short xMax = 435;
+  
+    const short yMin = 280;
+    const short yMax = 435;
+  
+    const short zMin = 285;
+    const short zMax = 435;
+} c_radio2;
 
-int xPWMpin = 3;
-int yPWMpin = 5;
-int zPWMpin = 6;
+//Pin analog de sortie pour la PWM
+const byte xPWMpin = 3;
+const byte yPWMpin = 5;
+const byte zPWMpin = 6;
 
-int xPWM, yPWM, zPWM;
+//valeurs de la PWM
+short xPWM, yPWM, zPWM;
+
+//pin de selection des données
+const byte pin = 4;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -41,13 +59,14 @@ int xPWM, yPWM, zPWM;
 void setup() 
 {
     Serial.begin(9600);
+    pinMode(pin, OUTPUT);
+    
     radio.begin();
     radio.openReadingPipe(0,address);
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_2MBPS);
     radio.startListening();
 }
-
 
 // ---------------------------------------- //
 // -                LOOP                  - //
@@ -56,32 +75,47 @@ void loop()
 {
     while(radio.available()) 
     {
-      radio.read(&receive_data, sizeof(data));
-      Serial.println(receive_data.xAxis, DEC);
-      Serial.println(receive_data.yAxis, DEC);
-      Serial.println(receive_data.zAxis, DEC);
-      Serial.println("");
-      
-      xPWM = map(receive_data.xAxis, xMin, xMax, 0, 255);
-      yPWM = map(receive_data.yAxis, yMin, yMax, 0, 255);
-      zPWM = map(receive_data.zAxis, zMin, zMax, 0, 255);
+        radio.read(&receive_data, sizeof(data));
+        Serial.println(receive_data.xAxis, DEC);
+        Serial.println(receive_data.yAxis, DEC);
+        Serial.println(receive_data.zAxis, DEC);
+        Serial.println("");
+  
+        //si les données recues sont positives : elles viennent de la radio 1
+        if (receive_data.xAxis >= 0)
+        {
+            xPWM = map(receive_data.xAxis, c_radio1.xMin, c_radio1.xMax, 0, 255);
+            yPWM = map(receive_data.yAxis, c_radio1.yMin, c_radio1.yMax, 0, 255);
+            zPWM = map(receive_data.zAxis, c_radio1.zMin, c_radio1.zMax, 0, 255);
+            digitalWrite(pin, HIGH);
+        }
+  
+        //sinon les données recues viennent de la radio 2
+        else 
+        {
+            xPWM = map(-1*receive_data.xAxis, c_radio2.xMin, c_radio2.xMax, 0, 255);
+            yPWM = map(-1*receive_data.yAxis, c_radio2.yMin, c_radio2.yMax, 0, 255);
+            zPWM = map(-1*receive_data.zAxis, c_radio2.zMin, c_radio2.zMax, 0, 255);
+            digitalWrite(pin, LOW);
+        }
 
-      if(xPWM < 0 ) xPWM = 0;
-      if(xPWM > 255 ) xPWM = 255;
-
-      if(yPWM < 0 ) yPWM = 0;
-      if(yPWM > 255 ) yPWM = 255;
-
-      if(zPWM < 0 ) zPWM = 0;
-      if(zPWM > 255 ) zPWM = 255;
-      
-      Serial.println(xPWM, DEC);
-      Serial.println(yPWM, DEC);
-      Serial.println(zPWM, DEC);
-      Serial.println("");
-      
-      analogWrite(xPWMpin, xPWM);
-      analogWrite(yPWMpin, yPWM);
-      analogWrite(zPWMpin, zPWM);
-  }
+        //sature la PWM en cas de dépassement 
+        if(xPWM < 0 )   xPWM = 0;
+        if(xPWM > 255 ) xPWM = 255;
+  
+        if(yPWM < 0 )   yPWM = 0;
+        if(yPWM > 255 ) yPWM = 255;
+  
+        if(zPWM < 0 )   zPWM = 0;
+        if(zPWM > 255 ) zPWM = 255;
+  
+        Serial.println(xPWM, DEC);
+        Serial.println(yPWM, DEC);
+        Serial.println(zPWM, DEC);
+        Serial.println("");
+        
+        analogWrite(xPWMpin, xPWM);
+        analogWrite(yPWMpin, yPWM);
+        analogWrite(zPWMpin, zPWM);
+    }
 }

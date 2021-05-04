@@ -7,20 +7,20 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
-const int x_out = A0;
-const int y_out = A1;
-const int z_out = A2;
+//ports de sortie
+const byte x_out = A0;
+const byte y_out = A1;
+const byte z_out = A2;
 
 RF24 radio(7,8);
 const byte address[6] = "00001";
 
 struct dataToSend
 {
-  int xAxis;
-  int yAxis;
-  int zAxis;
-};
-dataToSend send_data;
+    byte xAxis;
+    byte yAxis;
+    byte zAxis;
+} send_data;
 
 
 // ---------------------------------------- //

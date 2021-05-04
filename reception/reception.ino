@@ -20,19 +20,20 @@ struct data
 data receive_data;
 
 // à compléter
-int xMin = 291;
-int yMin = 288;
-int zMin = 286;
+int xMin = 260;
+int yMin = 255;
+int zMin = 270;
 
 // à compléter
-int xMax = 444;
-int yMax = 436;
-int zMax = 442;
+int xMax = 415;
+int yMax = 405;
+int zMax = 420;
 
 int xPWMpin = 3;
 int yPWMpin = 5;
 int zPWMpin = 6;
 
+int xPWM, yPWM, zPWM;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -61,9 +62,27 @@ void loop()
       Serial.println(receive_data.yAxis, DEC);
       Serial.println(receive_data.zAxis, DEC);
       Serial.println("");
-  
-      analogWrite(xPWMpin, map(receive_data.xAxis, xMin, xMax, 0, 255));
-      analogWrite(yPWMpin, map(receive_data.yAxis, yMin, yMax, 0, 255));
-      analogWrite(zPWMpin, map(receive_data.zAxis, zMin, zMax, 0, 255));
+      
+      xPWM = map(receive_data.xAxis, xMin, xMax, 0, 255);
+      yPWM = map(receive_data.yAxis, yMin, yMax, 0, 255);
+      zPWM = map(receive_data.zAxis, zMin, zMax, 0, 255);
+
+      if(xPWM < 0 ) xPWM = 0;
+      if(xPWM > 255 ) xPWM = 255;
+
+      if(yPWM < 0 ) yPWM = 0;
+      if(yPWM > 255 ) yPWM = 255;
+
+      if(zPWM < 0 ) zPWM = 0;
+      if(zPWM > 255 ) zPWM = 255;
+      
+      Serial.println(xPWM, DEC);
+      Serial.println(yPWM, DEC);
+      Serial.println(zPWM, DEC);
+      Serial.println("");
+      
+      analogWrite(xPWMpin, xPWM );
+      analogWrite(yPWMpin, yPWM );
+      analogWrite(zPWMpin, zPWM );
   }
 }

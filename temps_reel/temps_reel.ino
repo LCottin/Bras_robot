@@ -35,35 +35,23 @@ short posPince      = 90;
 
 //definition des vitesses
 enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
-byte vitesse;
-
-//Pour mesurer le temps d'execution d'un programme
-unsigned long tempsDebut, tempsFin;
-double duree;
-byte i = 0;
 
 struct VMAX
 {
-  const int XMIN = 291;
-  const int XMAX = 444;
+  const int XMIN = 80;
+  const int XMAX = 975;
+  const int XMOY = (XMIN + XMAX) / 2;
   
-  const int YMIN = 288; 
-  const int YMAX = 436;
+  const int YMIN = 45; 
+  const int YMAX = 975;
+  const int YMOY = (YMIN + YMAX) / 2;
   
   const int ZMIN = 286;
   const int ZMAX = 442;
 };
 VMAX V_MAX;
 
-struct valeurs
-{
-  int x;
-  int y;
-  int z;
-};
-valeurs* valeurs;
-
-int pos[3] = {0, 0, 0};
+int pos[3];
 
 // ---------------------------------------- //
 // -                 SETUP                - //
@@ -89,9 +77,13 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
+    byte vitesse = T_RAPIDE;
+    byte latence = 10;
+    
     miseEnForme();
-    Braccio.tournerCoude(pos[0], MOYEN);
-    delay(1000);
+    Braccio.tournerCoude(posCoude, vitesse);
+    Braccio.leverMain(posPoignetRot, vitesse);
+    delay(latence);
 }
 
 
@@ -100,26 +92,36 @@ void loop()
 // ---------------------------------------- //
 void miseEnForme()
 {
-    int dx = 15;
-    
     short lectureX = analogRead(A0);
     short lectureY = analogRead(A1);
     short lectureZ = analogRead(A2);
 
-    //if ( lectureX < x_min) lectureX = x_min;
-    //if ( lectureX > x_max) lectureX = x_max;
-  
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
     Serial.print("Z = "); Serial.println(lectureZ);
-    
-    pos[0] = dx + map(lectureX, 0, 790, 0, 180);
-    pos[1] = map(lectureY, 0, 1023, 10, 170);
-    pos[2] = map(lectureZ, 0, 1023, 10, 170);
-  
-    Serial.print("X envoyé = "); Serial.println(pos[0]);
-    Serial.print("Y envoyé = "); Serial.println(pos[1]);
-    Serial.print("Z envoyé = "); Serial.println(pos[2]);
-    Serial.print("\n");
 
+    /* CONE DE DECLENCHEMENT
+    if (lectureX < V_MAX.X1) posCoude -= 2;
+    if (lectureX > V_MAX.X2) posCoude += 2;
+
+    if (posCoude < 0) posCoude = 0;
+    if (posCoude > 180) posCoude = 180;
+
+    Serial.print("X envoyé = "); Serial.println(posCoude);
+    */
+    
+    posCoude      = map(lectureX, V_MAX.XMIN, V_MAX.XMAX, 0, 180);
+    posPoignetRot = map(lectureY, V_MAX.YMIN, V_MAX.YMAX, 0, 180);
+
+    if (posCoude > 180) posCoude = 180;
+    if (posCoude < 0)   posCoude = 0;
+
+    if (posPoignetRot > 180) posPoignetRot = 180;
+    if (posPoignetRot < 0)   posPoignetRot = 0;
+  
+    Serial.print("X envoyé = "); Serial.println(posCoude);
+    Serial.print("Y envoyé = "); Serial.println(posPoignetRot);
+
+    Serial.print("\n");
+    
 }

@@ -37,22 +37,19 @@ short posPince      = 90;
 enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
 
 //pin pour différencier la provenance des données
-const byte pin = A3;
+const byte selecteur = A3;
 
 //Valeurs extremes recues en analogread pour la radio 1
 struct V_MAX1
 {
     const short XMIN = 80;
     const short XMAX = 975;
-    const short XMOY = (XMIN + XMAX) / 2;
     
     const short YMIN = 45; 
     const short YMAX = 975;
-    const short YMOY = (YMIN + YMAX) / 2;
     
     const short ZMIN = 286;
     const short ZMAX = 442;
-    const short ZMOY = (ZMIN + ZMAX) / 2;
 } V_MAX1; 
 
 //Valeurs extremes recues en analogread pour la radio 2
@@ -80,7 +77,6 @@ void setup()
     Serial.begin(9600);
     Serial.print("Initialisation de ");
     Serial.println(__FILE__);
-    //pinMode(pin, INPUT);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -96,7 +92,7 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    const byte vitesse = T_RAPIDE;
+    const byte vitesse  = T_RAPIDE;
     const short latence = 40;
     
     miseEnForme();
@@ -114,7 +110,7 @@ void miseEnForme()
     short lectureX    = analogRead(A0);
     short lectureY    = analogRead(A1);
     short lectureZ    = analogRead(A2);
-    int   lecturePin  = analogRead(pin);
+    int   lectureSel  = analogRead(selecteur);
      
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
@@ -131,7 +127,7 @@ void miseEnForme()
     */
 
     //si les données sont en provenance de la radio 1
-    if (lecturePin > 511)
+    if (lectureSel > 511)
     {    
         //recupere les valeurs émises par la PWM
         posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);

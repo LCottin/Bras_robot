@@ -21,11 +21,12 @@ struct data
 struct c_radio1
 {
     const short xMin = 260;
-    const short yMin = 255;
-    const short zMin = 270;
-    
     const short xMax = 415;
+    
+    const short yMin = 255;
     const short yMax = 405;
+    
+    const short zMin = 270;
     const short zMax = 420;
 } c_radio1;
 
@@ -88,6 +89,7 @@ void loop()
             yPWM = map(receive_data.yAxis, c_radio1.yMin, c_radio1.yMax, 0, 255);
             zPWM = map(receive_data.zAxis, c_radio1.zMin, c_radio1.zMax, 0, 255);
             digitalWrite(pin, HIGH);
+            delay(10);
         }
   
         //sinon les données recues viennent de la radio 2
@@ -97,6 +99,7 @@ void loop()
             yPWM = map(-1*receive_data.yAxis, c_radio2.yMin, c_radio2.yMax, 0, 255);
             zPWM = map(-1*receive_data.zAxis, c_radio2.zMin, c_radio2.zMax, 0, 255);
             digitalWrite(pin, LOW);
+            delay(10);
         }
 
         //sature la PWM en cas de dépassement 

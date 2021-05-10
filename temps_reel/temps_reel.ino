@@ -48,8 +48,8 @@ struct V_MAX1
     const short YMIN = 45; 
     const short YMAX = 975;
     
-    const short ZMIN = 286;
-    const short ZMAX = 442;
+    const short ZMIN = 45;
+    const short ZMAX = 975;
 } V_MAX1; 
 
 //Valeurs extremes recues en analogread pour la radio 2
@@ -132,6 +132,7 @@ void miseEnForme()
         //recupere les valeurs émises par la PWM
         posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
         posPoignetRot = map(lectureY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
+        posBase       = map(lectureZ, V_MAX1.ZMIN, V_MAX1.ZMAX, 0, 180);
 
         //sature en cas de valeurs trop importantes pour proteger les moteurs
         if (posCoude > 180) posCoude = 180;
@@ -142,7 +143,7 @@ void miseEnForme()
       
         Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
         Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
-        Serial.print("Position selecteur    = "); Serial.println(lecturePin);
+        Serial.print("Position selecteur    = "); Serial.println(lectureSel);
         
         Serial.print("\n");
     }
@@ -161,7 +162,7 @@ void miseEnForme()
       
         Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
         Serial.print("posPince envoyée      = "); Serial.println(posPince);
-        Serial.print("Position selecteur    = "); Serial.println(lecturePin);
+        Serial.print("Position selecteur    = "); Serial.println(lectureSel);
         
         Serial.print("\n");
     }

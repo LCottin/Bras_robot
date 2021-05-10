@@ -37,7 +37,7 @@ short posPince      = 90;
 enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
 
 //pin pour différencier la provenance des données
-byte pin = A3;
+const byte pin = A3;
 
 //Valeurs extremes recues en analogread pour la radio 1
 struct V_MAX1
@@ -80,7 +80,7 @@ void setup()
     Serial.begin(9600);
     Serial.print("Initialisation de ");
     Serial.println(__FILE__);
-    pinMode(pin, INPUT);
+    //pinMode(pin, INPUT);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -97,7 +97,7 @@ void setup()
 void loop() 
 {
     const byte vitesse = T_RAPIDE;
-    const byte latence = 40;
+    const short latence = 40;
     
     miseEnForme();
     Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
@@ -114,7 +114,7 @@ void miseEnForme()
     short lectureX    = analogRead(A0);
     short lectureY    = analogRead(A1);
     short lectureZ    = analogRead(A2);
-    int   lecturePin  = digitalRead(pin);
+    int   lecturePin  = analogRead(pin);
      
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
@@ -131,7 +131,7 @@ void miseEnForme()
     */
 
     //si les données sont en provenance de la radio 1
-    if (lecturePin == HIGH)
+    if (lecturePin > 511)
     {    
         //recupere les valeurs émises par la PWM
         posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
@@ -146,12 +146,13 @@ void miseEnForme()
       
         Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
         Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
-    
+        Serial.print("Position selecteur    = "); Serial.println(lecturePin);
+        
         Serial.print("\n");
     }
 
     //sinon si les données sont en provenance de la radio 2
-    else if (lecturePin == LOW)
+    else 
     {
         posPoignetVer = map(lectureX, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
         posPince      = map(lectureY, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
@@ -164,7 +165,8 @@ void miseEnForme()
       
         Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
         Serial.print("posPince envoyée      = "); Serial.println(posPince);
-    
+        Serial.print("Position selecteur    = "); Serial.println(lecturePin);
+        
         Serial.print("\n");
     }
 }

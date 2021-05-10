@@ -95,6 +95,7 @@ void loop()
         //sinon les données recues viennent de la radio 2
         else 
         {
+            
             xPWM = map(-1*receive_data.xAxis, c_radio2.xMin, c_radio2.xMax, 0, 255);
             yPWM = map(-1*receive_data.yAxis, c_radio2.yMin, c_radio2.yMax, 0, 255);
             zPWM = map(-1*receive_data.zAxis, c_radio2.zMin, c_radio2.zMax, 0, 255);

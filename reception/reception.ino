@@ -52,7 +52,7 @@ const byte zPWMpin = 6;
 short xPWM, yPWM, zPWM;
 
 //pin de selection des données
-const byte pin = 4;
+const byte selecteur = 4;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -60,7 +60,7 @@ const byte pin = 4;
 void setup() 
 {
     Serial.begin(9600);
-    pinMode(pin, OUTPUT);
+    pinMode(selecteur, OUTPUT);
     
     radio.begin();
     radio.openReadingPipe(0,address);
@@ -88,19 +88,16 @@ void loop()
             xPWM = map(receive_data.xAxis, c_radio1.xMin, c_radio1.xMax, 0, 255);
             yPWM = map(receive_data.yAxis, c_radio1.yMin, c_radio1.yMax, 0, 255);
             zPWM = map(receive_data.zAxis, c_radio1.zMin, c_radio1.zMax, 0, 255);
-            digitalWrite(pin, HIGH);
-            delay(10);
+            digitalWrite(selecteur, HIGH);
         }
   
         //sinon les données recues viennent de la radio 2
         else 
         {
-            
             xPWM = map(-1*receive_data.xAxis, c_radio2.xMin, c_radio2.xMax, 0, 255);
             yPWM = map(-1*receive_data.yAxis, c_radio2.yMin, c_radio2.yMax, 0, 255);
             zPWM = map(-1*receive_data.zAxis, c_radio2.zMin, c_radio2.zMax, 0, 255);
-            digitalWrite(pin, LOW);
-            delay(10);
+            digitalWrite(selecteur, LOW);
         }
 
         //sature la PWM en cas de dépassement 

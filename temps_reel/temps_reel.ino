@@ -37,7 +37,7 @@ short posPince      = 90;
 enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
 
 //pin pour différencier la provenance des données
-byte pin = 4;
+byte pin = A3;
 
 //Valeurs extremes recues en analogread pour la radio 1
 struct V_MAX1
@@ -60,15 +60,15 @@ struct V_MAX2
 {
     const short XMIN = 10;
     const short XMAX = 935;
-    const short XMOY = (V_MAX2.XMIN + V_MAX2.XMAX) / 2;
+    const short XMOY = (XMIN + XMAX) / 2;
   
     const short YMIN = 0;
     const short YMAX = 830;
-    const short YMOY = (V_MAX2.YMIN + V_MAX2.YMAX) / 2;
+    const short YMOY = (YMIN + YMAX) / 2;
   
     const short ZMIN = 0;
     const short ZMAX = 860;
-    const short ZMOY = (V_MAX2.ZMIN + V_MAX2.ZMAX) / 2;
+    const short ZMOY = (ZMIN + ZMAX) / 2;
 } V_MAX2;
 
 

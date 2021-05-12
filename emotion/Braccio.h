@@ -60,42 +60,42 @@ public:
   void positionDroite();
 
   /**
-   * Makes the basement turns 
+   * Makes the basement turn 
    * @param valeurAngle New angle of the basement
    * @param vitesse Speed of the movement
    */
   void tournerBase(short valeurAngle, byte vitesse);
   
   /**
-   * Makes the shoulder turns 
+   * Makes the shoulder turn 
    * @param valeurAngle New angle of the shoulder
    * @param vitesse Speed of the movement
    */
   void tournerEpaule(short valeurAngle, byte vitesse);
 
   /**
-   * Makes the elbow turns 
+   * Makes the elbow turn 
    * @param valeurAngle New angle of the elbow
    * @param vitesse Speed of the movement
    */
   void tournerCoude(short valeurAngle, byte vitesse);
 
   /**
-   * Makes the hand rises 
+   * Makes the hand rise 
    * @param valeurAngle New angle of the hand
    * @param vitesse Speed of the movement
    */
   void leverMain(short valeurAngle, byte vitesse);
 
   /**
-   * Makes the hand turns 
+   * Makes the hand turn 
    * @param valeurAngle New angle of the hand
    * @param vitesse Speed of the movement
    */
   void tournerMain(short valeurAngle, byte vitesse);
 
   /**
-   * Makes the hand opens
+   * Makes the hand open
    * @param valeurAngle New angle of the hand
    * @param vitesse Speed of the movement
    */

@@ -3,7 +3,6 @@
 **/
 
 #include "Braccio.h"
-//#include <Servo.h>
 
 //bibliothèques pour la comminucation sans fils
 //#include <SPI.h>
@@ -47,7 +46,7 @@ unsigned long tempsDebut, tempsFin;
 double duree;
 byte i = 0;
 
-//Pour la module SF
+//Pour le module SF
 //RF24 radio(2, 4);
 const byte adresse[6] = "00001";
 struct data 
@@ -64,7 +63,6 @@ struct valeur
   int YMIN, YMAX;
   int ZMIN, ZMAX;
 };
-
 valeur valeurs;
 
 
@@ -98,8 +96,6 @@ void setup()
     delay(3000);
     joie();
 
-
-
   // ----------------------------------------------------------------------------------------------------------- //
 }    
 
@@ -123,7 +119,6 @@ void init1()
     posPoignetRot = 90;
     posPoignetVer = 90;
     posPince      = 90;
-
 }
 
 
@@ -348,7 +343,6 @@ void joie()
 
     delay(1000);
     Braccio.positionDroite();
-    return;
   
     Braccio.leverMain(90, vitesse);
     Braccio.tournerBase(170, RAPIDE);
@@ -413,7 +407,6 @@ void joie()
         delay(200);
     }
   
-    
     delay(1000);
     Braccio.positionDroite();
   
@@ -476,7 +469,7 @@ void surprise()
 // ---------------------------------------- //
 void vague()
 {
-    const byte vitesse = T_RAPIDE;
+    vitesse = T_RAPIDE;
     Braccio.positionDroite();
   
     posCoude = 135;

@@ -313,63 +313,79 @@ void _Braccio::testAmplitude()
 	} 
 }
 
-void _Braccio::tournerBase(short valeurAngle, const byte vitesse)
+void _Braccio::tournerBase(short valeurAngle, byte vitesse)
 {
 	if (valeurAngle < 0)    valeurAngle = 0;
   	if (valeurAngle > 180)  valeurAngle = 180;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
   	posCoude = valeurAngle;
   	ServoMovement(vitesse, valeurAngle, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
 }
 
 
-void _Braccio::tournerEpaule(short valeurAngle, const byte vitesse)
+void _Braccio::tournerEpaule(short valeurAngle, byte vitesse)
 {
 	if (valeurAngle < 20)    valeurAngle = 20;
 	if (valeurAngle > 160)   valeurAngle = 160;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	posEpaule = valeurAngle;
 	ServoMovement(vitesse, posBase, valeurAngle, posCoude, posPoignetRot, posPoignetVer, posPince);
 }
 
-void _Braccio::tournerCoude(short valeurAngle, const byte vitesse)
+void _Braccio::tournerCoude(short valeurAngle, byte vitesse)
 {
 	if (valeurAngle < 0)    valeurAngle = 0;
 	if (valeurAngle > 180)  valeurAngle = 180;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	posCoude = valeurAngle;
 	ServoMovement(vitesse, posBase, posEpaule, valeurAngle, posPoignetRot, posPoignetVer, posPince);
 }
 
-void _Braccio::leverMain(short valeurAngle, const byte vitesse)
+void _Braccio::leverMain(short valeurAngle, byte vitesse)
 {
 	if (valeurAngle < 0)    valeurAngle = 0;
 	if (valeurAngle > 180)  valeurAngle = 180;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	posPoignetRot = valeurAngle;
 	ServoMovement(vitesse, posBase, posEpaule, posCoude, valeurAngle, posPoignetVer, posPince);
 }
 
-void _Braccio::tournerMain(short valeurAngle, const byte vitesse)
+void _Braccio::tournerMain(short valeurAngle, byte vitesse)
 {
 	if (valeurAngle < 0)    valeurAngle = 0;
 	if (valeurAngle > 180)  valeurAngle = 180;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	posPoignetVer = valeurAngle;
   ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, valeurAngle, posPince);
 }
 
-void _Braccio::ouvrirPince(short valeurAngle, const byte vitesse)
+void _Braccio::ouvrirPince(short valeurAngle, byte vitesse)
 {
 	if (valeurAngle < 25)    valeurAngle = 25;
 	if (valeurAngle > 90)    valeurAngle = 90;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	posPince = valeurAngle;
  	ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, valeurAngle);
 }
 
-void _Braccio::mainOuverte(const byte vitesse)
+void _Braccio::mainOuverte(byte vitesse)
 {
 	posPince = 90;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	ouvrirPince(posPince, vitesse);
 }
 
-void _Braccio::mainFermee(const byte vitesse)
+void _Braccio::mainFermee(byte vitesse)
 {
 	posPince = 25;
+	if (vitesse < 10)		vitesse 	= 10;
+	if (vitesse > 30)		vitesse		= 30;
 	ouvrirPince(posPince, vitesse);
 }

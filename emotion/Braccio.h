@@ -64,54 +64,54 @@ public:
    * @param valeurAngle New angle of the basement
    * @param vitesse Speed of the movement
    */
-  void tournerBase(short valeurAngle, const byte vitesse);
+  void tournerBase(short valeurAngle, byte vitesse);
   
   /**
    * Makes the shoulder turns 
    * @param valeurAngle New angle of the shoulder
    * @param vitesse Speed of the movement
    */
-  void tournerEpaule(short valeurAngle, const byte vitesse);
+  void tournerEpaule(short valeurAngle, byte vitesse);
 
   /**
    * Makes the elbow turns 
    * @param valeurAngle New angle of the elbow
    * @param vitesse Speed of the movement
    */
-  void tournerCoude(short valeurAngle, const byte vitesse);
+  void tournerCoude(short valeurAngle, byte vitesse);
 
   /**
    * Makes the hand rises 
    * @param valeurAngle New angle of the hand
    * @param vitesse Speed of the movement
    */
-  void leverMain(short valeurAngle, const byte vitesse);
+  void leverMain(short valeurAngle, byte vitesse);
 
   /**
    * Makes the hand turns 
    * @param valeurAngle New angle of the hand
    * @param vitesse Speed of the movement
    */
-  void tournerMain(short valeurAngle, const byte vitesse);
+  void tournerMain(short valeurAngle, byte vitesse);
 
   /**
    * Makes the hand opens
    * @param valeurAngle New angle of the hand
    * @param vitesse Speed of the movement
    */
-  void ouvrirPince(short valeurAngle, const byte vitesse);
+  void ouvrirPince(short valeurAngle, byte vitesse);
 
   /**
    * Makes the hand fully opened
    * @param vitesse Speed of the movement
    */
-  void mainOuverte(const byte vitesse);
+  void mainOuverte(byte vitesse);
 
   /**
    * Makes the hand fully closed
    * @param vitesse Speed of the movement
    */
-  void mainFermee(const byte vitesse);
+  void mainFermee(byte vitesse);
 
 
 private:

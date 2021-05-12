@@ -9,18 +9,18 @@
 //#include <nRF24L01.h>
 //#include <RF24.h>
 
- /*
-   Step Delay: un délai en millisecondes entre le mouvement de chaque servo. Valeurs autorisées
-   de 10 à 30 ms.
-   M1=base degrees.            Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
-   M2=shoulder degrees.        Valeurs autorisées de 15 à 165 degrés (milieu = 90°)
-   M3=elbow degrees.           Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
-   M4=wrist vertical degrees.  Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
-   M5=wrist rotation degrees.  Valeurs autorisées de 0 à 180 degrés
-   M6=gripper degrees.         Valeurs autorisées de 10 à 90 degrés. 
-      - 10: la pince est ouverte, 
-      - 90: la pince est fermée.
-  */
+/*
+    Step Delay: un délai en millisecondes entre le mouvement de chaque servo. Valeurs autorisées
+    de 10 à 30 ms.
+    M1=base degrees.            Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
+    M2=shoulder degrees.        Valeurs autorisées de 15 à 165 degrés (milieu = 95°)
+    M3=elbow degrees.           Valeurs autorisées de 0 à 180 degrés  (milieu = 95°)
+    M4=wrist vertical degrees.  Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
+    M5=wrist rotation degrees.  Valeurs autorisées de 0 à 180 degrés  (milieu = 90°)
+    M6=gripper degrees.         Valeurs autorisées de 25 à 90 degrés. 
+        - 10: la pince est ouverte, 
+        - 90: la pince est fermée.
+*/
  
 Servo base;      //pour tourner sur la base
 Servo shoulder;  //servo 2, en bas

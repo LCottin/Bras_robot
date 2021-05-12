@@ -24,12 +24,12 @@ extern Servo wrist_rot;
 extern Servo wrist_ver;
 extern Servo gripper;
 
-int step_base = 90;
-int step_shoulder = 90;
-int step_elbow = 90;
-int step_wrist_rot = 90;
-int step_wrist_ver = 90;
-int step_gripper = 73;
+int step_base 		= 90;
+int step_shoulder 	= 95;
+int step_elbow 		= 95;
+int step_wrist_rot 	= 90;
+int step_wrist_ver 	= 90;
+int step_gripper 	= 90;
 
 extern short posBase; 
 extern short posEpaule; 

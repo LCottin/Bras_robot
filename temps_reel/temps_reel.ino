@@ -32,9 +32,6 @@ short posPoignetRot = 90;
 short posPoignetVer = 90;
 short posPince      = 90;
 
-//definition des vitesses
-enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
-
 //pin pour différencier la provenance des données
 const byte selecteur = A3;
 
@@ -56,15 +53,12 @@ struct V_MAX2
 {
     const short XMIN = 10;
     const short XMAX = 935;
-    const short XMOY = (XMIN + XMAX) / 2;
   
     const short YMIN = 0;
     const short YMAX = 830;
-    const short YMOY = (YMIN + YMAX) / 2;
   
     const short ZMIN = 0;
     const short ZMAX = 860;
-    const short ZMOY = (ZMIN + ZMAX) / 2;
 } V_MAX2;
 
 
@@ -91,7 +85,10 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
+    //vitesse de rotation des moteurs à choisir parmi l'énumération (enum) des vitesses
     const byte vitesse  = T_RAPIDE;
+
+    //latence entre chaque récéption, en millisecondes
     const short latence = 40;
     
     miseEnForme();
@@ -105,7 +102,7 @@ void loop()
 // ---------------------------------------- //
 void miseEnForme()
 {
-    //lectures des 4 entrées
+    //lectures des 4 entrées analogiques
     short lectureX    = analogRead(A0);
     short lectureY    = analogRead(A1);
     short lectureZ    = analogRead(A2);
@@ -128,12 +125,11 @@ void miseEnForme()
     //si les données sont en provenance de la radio 1
     if (lectureSel > 511)
     {    
-        //recupere les valeurs émises par la PWM
+        //recuperation et mapping des valeurs émises par la PWM
         posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
         posPoignetRot = map(lectureY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
-        posBase       = map(lectureZ, V_MAX1.ZMIN, V_MAX1.ZMAX, 0, 180);
 
-        //sature en cas de valeurs trop importantes pour proteger les moteurs
+        //saturation en cas de valeurs trop importantes pour proteger les moteurs
         if (posCoude > 180) posCoude = 180;
         if (posCoude < 0)   posCoude = 0;
     
@@ -142,9 +138,6 @@ void miseEnForme()
       
         Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
         Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
-        Serial.print("Position selecteur    = "); Serial.println(lectureSel);
-        
-        Serial.print("\n");
     }
 
     //sinon si les données sont en provenance de la radio 2
@@ -161,8 +154,7 @@ void miseEnForme()
       
         Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
         Serial.print("posPince envoyée      = "); Serial.println(posPince);
-        Serial.print("Position selecteur    = "); Serial.println(lectureSel);
-        
-        Serial.print("\n");
     }
+    Serial.print("Position selecteur    = "); Serial.println(lectureSel);
+    Serial.print("\n");
 }

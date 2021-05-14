@@ -37,8 +37,7 @@ short posPoignetRot = 90;
 short posPoignetVer = 90;
 short posPince      = 90;
 
-//definition des vitesses
-enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
+//definition de la vitesse des moteurs
 byte vitesse;
 
 //Pour mesurer le temps d'execution d'un programme
@@ -49,13 +48,6 @@ byte i = 0;
 //Pour le module SF
 //RF24 radio(2, 4);
 const byte adresse[6] = "00001";
-struct data 
-{
-    int xAxis;
-    int yAxis;
-    int zAxis;        
-};
-data receive_data;
 
 struct valeur
 {

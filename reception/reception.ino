@@ -10,6 +10,7 @@
 RF24 radio(7, 8);
 const byte address[6] = "00001";
 
+//structure de données pour la récéption des inclinaisons fournies par l'accéléromètre
 struct data 
 {
     short xAxis;
@@ -62,6 +63,7 @@ void setup()
     Serial.begin(9600);
     pinMode(selecteur, OUTPUT);
     
+    //initialisation du récépteur
     radio.begin();
     radio.openReadingPipe(0,address);
     radio.setPALevel(RF24_PA_MAX);
@@ -76,6 +78,7 @@ void loop()
 {
     while(radio.available()) 
     {
+        //lorsque la radio est disponible (qu'elle a recu des données), on les lit et stocke dans la structure
         radio.read(&receive_data, sizeof(data));
         Serial.println(receive_data.xAxis, DEC);
         Serial.println(receive_data.yAxis, DEC);
@@ -85,22 +88,28 @@ void loop()
         //si les données recues sont positives : elles viennent de la radio 1
         if (receive_data.xAxis >= 0)
         {
+            //mapping depuis les valeurs extremes vers la plage de la PWM 
             xPWM = map(receive_data.xAxis, c_radio1.xMin, c_radio1.xMax, 0, 255);
             yPWM = map(receive_data.yAxis, c_radio1.yMin, c_radio1.yMax, 0, 255);
             zPWM = map(receive_data.zAxis, c_radio1.zMin, c_radio1.zMax, 0, 255);
+
+            //positionne le selecteur à 1 
             digitalWrite(selecteur, HIGH);
         }
   
         //sinon les données recues viennent de la radio 2
         else 
         {
+            //changement de signe puis mapping depuis les valeurs extremes vers la plage de la PWM 
             xPWM = map(-1*receive_data.xAxis, c_radio2.xMin, c_radio2.xMax, 0, 255);
             yPWM = map(-1*receive_data.yAxis, c_radio2.yMin, c_radio2.yMax, 0, 255);
             zPWM = map(-1*receive_data.zAxis, c_radio2.zMin, c_radio2.zMax, 0, 255);
+
+            //positionne le selecteur à 0
             digitalWrite(selecteur, LOW);
         }
 
-        //sature la PWM en cas de dépassement 
+        //sature la PWM sur les 3 axes en cas de dépassement 
         if(xPWM < 0 )   xPWM = 0;
         if(xPWM > 255 ) xPWM = 255;
   
@@ -115,6 +124,7 @@ void loop()
         Serial.println(zPWM, DEC);
         Serial.println("");
         
+        //écriture des 3 valeurs recues sur la PWM de sortie
         analogWrite(xPWMpin, xPWM);
         analogWrite(yPWMpin, yPWM);
         analogWrite(zPWMpin, zPWM);

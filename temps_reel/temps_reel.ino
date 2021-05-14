@@ -91,9 +91,14 @@ void loop()
     //latence entre chaque récéption, en millisecondes
     const short latence = 40;
     
+    //récupération des données sur les ports analogiques de la carte 
     miseEnForme();
+
+    //envoie des positions correspondantes aux différents moteurs
     Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-    delay(latence);
+
+    //délai d'attente avant de recommencer (10 ms au minimum)
+    delay(latence > 10 ? latence : 10);
 }
 
 
@@ -106,21 +111,11 @@ void miseEnForme()
     short lectureX    = analogRead(A0);
     short lectureY    = analogRead(A1);
     short lectureZ    = analogRead(A2);
-    int   lectureSel  = analogRead(selecteur);
+    short lectureSel  = analogRead(selecteur);
      
     Serial.print("X = "); Serial.println(lectureX);
     Serial.print("Y = "); Serial.println(lectureY);
     Serial.print("Z = "); Serial.println(lectureZ);
-
-    /* CONE DE DECLENCHEMENT
-    if (lectureX < V_MAX.X1) posCoude -= 2;
-    if (lectureX > V_MAX.X2) posCoude += 2;
-
-    if (posCoude < 0) posCoude = 0;
-    if (posCoude > 180) posCoude = 180;
-
-    Serial.print("X envoyé = "); Serial.println(posCoude);
-    */
 
     //si les données sont en provenance de la radio 1
     if (lectureSel > 511)

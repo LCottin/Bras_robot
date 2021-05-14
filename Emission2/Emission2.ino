@@ -15,6 +15,7 @@ const byte z_out = A2;
 RF24 radio(7,8);
 const byte address[6] = "00001";
 
+//structure de données pour l'envoie des inclinaisons fournies par l'accéléromètre
 struct dataToSend
 {
     byte xAxis;
@@ -28,6 +29,7 @@ struct dataToSend
 // ---------------------------------------- //
 void setup() 
 {
+    //Configuration de l'émetteur
     radio.begin();
     radio.openWritingPipe(address);
     radio.setPALevel(RF24_PA_MAX);
@@ -41,9 +43,12 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
+    //lecture des données sur les 3 axes et inversion de signe
     send_data.xAxis = -1*analogRead(x_out);
     send_data.yAxis = -1*analogRead(y_out);
     send_data.zAxis = -1*analogRead(z_out);
+
+    //envoie des données lues
     radio.write(&send_data, sizeof(dataToSend));
     delay(70);
 }

@@ -49,15 +49,6 @@ byte i = 0;
 //RF24 radio(2, 4);
 const byte adresse[6] = "00001";
 
-struct valeur
-{
-  int XMAX, XMIN;
-  int YMIN, YMAX;
-  int ZMIN, ZMAX;
-};
-valeur valeurs;
-
-
 // ---------------------------------------- //
 // -                SETUP                 - //
 // ---------------------------------------- //

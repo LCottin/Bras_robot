@@ -83,11 +83,11 @@ void setup()
 void loop() 
 {
     const byte vitesse  = T_RAPIDE;
-    const short latence = 40;
+    const short latence = 10;
     
     miseEnForme();
     Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-    delay(500);
+    delay(latence);
 }
 
 

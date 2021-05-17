@@ -8,7 +8,6 @@ Plusieurs dossiers sont présents :
   - emotion : le bras bouge selon une ou plusieurs séquences (émotion) enregristrée(s).
   - Emission : envoie les données de l'accéléromètre sans fils depuis un Arduino nano vers l'Arduino uno de contrôle du bras robot, 1e bracelet.
   - Emission2 : envoie les données de l'accéléromètre sans fils depuis un Arduino nano vers l'Arduino uno de contrôle du bras robot, 2e bracelet.
-  - test_acce : fichier de test et de caractérisation de l'acceléromètre et du module sans fil.
   - Reception : recupère les données envoyées par l'acceléromètre sur un Arduino nano avant de les transmettre au bras via une conversion analogique-numérique.
 
 Il est à noter que les fichiers Braccio.h et Braccio.cpp ne sont pas synchronisés entre les dossiers : toutes modifications de ces fichiers dans l'un des deux dossiers doit également être faite dans l'autre dossier !

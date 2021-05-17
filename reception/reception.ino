@@ -36,8 +36,8 @@ struct c_radio2
     const short xMin = 280;
     const short xMax = 435;
   
-    const short yMin = 280;
-    const short yMax = 435;
+    const short yMin = 265;
+    const short yMax = 405;
 } c_radio2;
 
 //Pin analog de sortie pour la PWM

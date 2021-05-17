@@ -32,9 +32,6 @@ short posPoignetRot = 90;
 short posPoignetVer = 90;
 short posPince      = 90;
 
-//pin pour différencier la provenance des données
-const byte selecteur = A3;
-
 //Valeurs extremes recues en analogread pour la radio 1
 struct V_MAX1
 {
@@ -85,20 +82,12 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    //vitesse de rotation des moteurs à choisir parmi l'énumération (enum) des vitesses
     const byte vitesse  = T_RAPIDE;
-
-    //latence entre chaque récéption, en millisecondes
-    const short latence = 40;
+    const short latence = 10;
     
-    //récupération des données sur les ports analogiques de la carte 
     miseEnForme();
-
-    //envoie des positions correspondantes aux différents moteurs
     Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-
-    //délai d'attente avant de recommencer (10 ms au minimum)
-    delay(latence > 10 ? latence : 10);
+    delay(latence);
 }
 
 
@@ -107,49 +96,47 @@ void loop()
 // ---------------------------------------- //
 void miseEnForme()
 {
-    //lectures des 4 entrées analogiques
+    //lectures des 4 entrées
     short lectureX    = analogRead(A0);
     short lectureY    = analogRead(A1);
     short lectureZ    = analogRead(A2);
-    short lectureSel  = analogRead(selecteur);
+    short lectureX2    = analogRead(A3);
+    short lectureY2    = analogRead(A4);
      
-    Serial.print("X = "); Serial.println(lectureX);
-    Serial.print("Y = "); Serial.println(lectureY);
-    Serial.print("Z = "); Serial.println(lectureZ);
-
-    //si les données sont en provenance de la radio 1
-    if (lectureSel > 511)
-    {    
-        //recuperation et mapping des valeurs émises par la PWM
-        posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
-        posPoignetRot = map(lectureY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
-
-        //saturation en cas de valeurs trop importantes pour proteger les moteurs
-        if (posCoude > 180) posCoude = 180;
-        if (posCoude < 0)   posCoude = 0;
+    //Serial.print("X = "); Serial.println(lectureX);
+    //Serial.print("Y = "); Serial.println(lectureY);
+    //Serial.print("Z = "); Serial.println(lectureZ);
+    //Serial.print("X2 = "); Serial.println(lectureX2);
+    Serial.print("Y2 = "); Serial.println(lectureY2);
+   
+    //recupere les valeurs émises par la PWM
+    posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
+    posPoignetRot = map(lectureY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
     
-        if (posPoignetRot > 180) posPoignetRot = 180;
-        if (posPoignetRot < 0)   posPoignetRot = 0;
-      
-        Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
-        Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
-    }
-
-    //sinon si les données sont en provenance de la radio 2
-    else 
-    {
-        posPoignetVer = map(lectureX, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
-        posPince      = map(lectureY, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
+    //sature en cas de valeurs trop importantes pour proteger les moteurs
+    if (posCoude > 180) posCoude = 180;
+    if (posCoude < 0)   posCoude = 0;
     
-        if (posPoignetVer > 180) posPoignetVer = 180;
-        if (posPoignetVer < 0)   posPoignetVer = 0;
+    if (posPoignetRot > 180) posPoignetRot = 180;
+    if (posPoignetRot < 0)   posPoignetRot = 0;
     
-        if (posPince > 90) posPince = 90;
-        if (posPince < 25) posPince = 25;
-      
-        Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
-        Serial.print("posPince envoyée      = "); Serial.println(posPince);
-    }
-    Serial.print("Position selecteur    = "); Serial.println(lectureSel);
+    Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
+    Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
+    
     Serial.print("\n");
+    
+    posPoignetVer = map(lectureX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
+    posPince      = map(lectureY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
+    
+    if (posPoignetVer > 180) posPoignetVer = 180;
+    if (posPoignetVer < 0)   posPoignetVer = 0;
+    
+    if (posPince > 90) posPince = 90;
+    if (posPince < 25) posPince = 25;
+    
+    Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
+    Serial.print("posPince envoyée      = "); Serial.println(posPince);
+    
+    Serial.print("\n");
+    
 }

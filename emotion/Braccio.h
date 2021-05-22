@@ -58,7 +58,7 @@ public:
   /* Tests the arm around all directions */
   void testAmplitude();
 
-  /* This function makes the arm stands */
+  /* This function makes the arm stand */
   void positionDroite();
 
   /**

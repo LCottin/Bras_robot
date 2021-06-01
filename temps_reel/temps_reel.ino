@@ -93,6 +93,7 @@ void setup()
     initBufferEchantillons();
 }
 
+
 // ---------------------------------------- //
 // -                  LOOP                - //
 // ---------------------------------------- //
@@ -105,6 +106,7 @@ void loop()
     Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
     delay(latence);
 }
+
 
 // ---------------------------------------- //
 // -     INITIALISATION DES BUFFERS       - //

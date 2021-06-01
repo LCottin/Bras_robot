@@ -72,11 +72,7 @@ void loop()
     while(radio.available()) 
     {
         radio.read(&receive_data, sizeof(data));
-        Serial.println(receive_data.xAxis, DEC);
-        Serial.println(receive_data.yAxis, DEC);
-        Serial.println(receive_data.zAxis, DEC);
-        Serial.println("");
-  
+
         //si les données recues sont positives : elles viennent de la radio 1
         if (receive_data.xAxis >= 0)
         {
@@ -84,7 +80,6 @@ void loop()
             yPWM = map(receive_data.yAxis, c_radio1.yMin, c_radio1.yMax, 0, 255);
             zPWM = map(receive_data.zAxis, c_radio1.zMin, c_radio1.zMax, 0, 255);
         }
-  
         //sinon les données recues viennent de la radio 2
         else 
         {
@@ -108,14 +103,6 @@ void loop()
         if(yPWM2 < 0 )   yPWM2 = 0;
         if(yPWM2 > 255 ) yPWM2 = 255;
   
-        Serial.println(xPWM, DEC);
-        Serial.println(yPWM, DEC);
-        Serial.println(zPWM, DEC);
-        Serial.println(xPWM2, DEC);
-        Serial.println(yPWM2, DEC);
-        
-        Serial.println("");
-        
         analogWrite(xPWMpin, xPWM);
         analogWrite(yPWMpin, yPWM);
         analogWrite(zPWMpin, zPWM);

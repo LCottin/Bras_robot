@@ -51,8 +51,8 @@ struct V_MAX2
     const short XMIN = 10;
     const short XMAX = 935;
   
-    const short YMIN = 0;
-    const short YMAX = 830;
+    const short YMIN = 680;
+    const short YMAX = 936;
   
     const short ZMIN = 0;
     const short ZMAX = 860;
@@ -82,14 +82,13 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    const byte vitesse  = T_RAPIDE;
-    const short latence = 10;
+    const byte vitesse  = RAPIDE;
+    const short latence = 500;
     
     miseEnForme();
     Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
     delay(latence);
 }
-
 
 // ---------------------------------------- //
 // -      MISE EN FORME DES DONNEES       - //
@@ -100,19 +99,18 @@ void miseEnForme()
     short lectureX    = analogRead(A0);
     short lectureY    = analogRead(A1);
     short lectureZ    = analogRead(A2);
-    short lectureX2    = analogRead(A3);
-    short lectureY2    = analogRead(A4);
+    short lectureX2   = analogRead(A3);
+    short lectureY2   = analogRead(A4);
      
-    //Serial.print("X = "); Serial.println(lectureX);
-    //Serial.print("Y = "); Serial.println(lectureY);
-    //Serial.print("Z = "); Serial.println(lectureZ);
-    //Serial.print("X2 = "); Serial.println(lectureX2);
-    Serial.print("Y2 = "); Serial.println(lectureY2);
-   
-    //recupere les valeurs émises par la PWM
+    Serial.print("Analog pince = "); Serial.println(lectureY2);    //recupere les valeurs émises par la PWM
+    
     posCoude      = map(lectureX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
     posPoignetRot = map(lectureY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
+    posPoignetVer = map(lectureX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
+    posPince      = map(lectureY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
     
+    Serial.print("Pos pince = "); Serial.println(posPince);
+
     //sature en cas de valeurs trop importantes pour proteger les moteurs
     if (posCoude > 180) posCoude = 180;
     if (posCoude < 0)   posCoude = 0;
@@ -120,23 +118,9 @@ void miseEnForme()
     if (posPoignetRot > 180) posPoignetRot = 180;
     if (posPoignetRot < 0)   posPoignetRot = 0;
     
-    Serial.print("posCoude envoyée      = "); Serial.println(posCoude);
-    Serial.print("posPoignetRot envoyée = "); Serial.println(posPoignetRot);
-    
-    Serial.print("\n");
-    
-    posPoignetVer = map(lectureX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
-    posPince      = map(lectureY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
-    
     if (posPoignetVer > 180) posPoignetVer = 180;
     if (posPoignetVer < 0)   posPoignetVer = 0;
     
     if (posPince > 90) posPince = 90;
     if (posPince < 25) posPince = 25;
-    
-    Serial.print("posPoignetVer envoyée = "); Serial.println(posPoignetVer);
-    Serial.print("posPince envoyée      = "); Serial.println(posPince);
-    
-    Serial.print("\n");
-    
 }

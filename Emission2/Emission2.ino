@@ -15,14 +15,13 @@ const byte z_out = A2;
 RF24 radio(7,8);
 const byte address[6] = "00001";
 
-//structure de données pour l'envoie des inclinaisons fournies par l'accéléromètre
+//structure de données pour l'envoie des inclinaisons 
 struct dataToSend
 {
     byte xAxis;
     byte yAxis;
     byte zAxis;
 } send_data;
-
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -36,7 +35,6 @@ void setup()
     radio.setDataRate(RF24_2MBPS);
     radio.stopListening();
 }
-
 
 // ---------------------------------------- //
 // -                LOOP                  - //

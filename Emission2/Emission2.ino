@@ -19,9 +19,9 @@ const byte address[6] = "00001";
 //structure de données pour l'envoie des inclinaisons 
 struct dataToSend
 {
-    byte xAxis;
-    byte yAxis;
-    byte zAxis;
+    short xAxis;
+    short yAxis;
+    short zAxis;
 } send_data;
 
 // ---------------------------------------- //

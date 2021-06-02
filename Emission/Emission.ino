@@ -19,9 +19,9 @@ const byte address[6] = "00001";
 //structure de données pour l'envoie des inclinaisons fournies par l'accéléromètre
 struct dataToSend
 {
-    byte xAxis;
-    byte yAxis;
-    byte zAxis;
+    short xAxis;
+    short yAxis;
+    short zAxis;
 } send_data;
 
 
@@ -37,9 +37,11 @@ void setup()
     radio.setDataRate(RF24_2MBPS);
     radio.stopListening();
 
+    /*
     //initialisation moniteur serie
     Serial.begin(9600);
-}
+    */
+}   
 
 
 // ---------------------------------------- //

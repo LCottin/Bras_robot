@@ -49,5 +49,5 @@ void loop()
 
     //envoie des données lues
     radio.write(&send_data, sizeof(dataToSend));
-    delay(70);
+    delay(10);
 }

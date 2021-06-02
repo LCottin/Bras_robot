@@ -146,38 +146,46 @@ void miseEnForme()
     x2[cmp] = analogRead(A3);
     y2[cmp] = analogRead(A4);
     
-    //moyennage des valeurs
-    for(int i = 0; i < N; i++)
+    if ((x1[cmp] == 0 && y1[cmp] && z1[cmp]) || (x2[cmp] == 0 && y2[cmp]))
     {
-      moyenneX  += x1[i];
-      moyenneY  += y1[i];
-      moyenneZ  += z1[i];
-      moyenneX2 += x2[i];
-      moyenneY2 += y2[i];
+        Braccio.positionDroite();
     }
 
-    moyenneX  /= N;
-    moyenneY  /= N;
-    moyenneZ  /= N;
-    moyenneX2 /= N;
-    moyenneY2 /= N;
-    
-    //recupere les valeurs émises par la PWM
-    posCoude      = map(moyenneX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
-    posPoignetRot = map(moyenneY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
-    posPoignetVer = map(moyenneX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
-    posPince      = map(moyenneY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
-    
-    //sature en cas de valeurs trop importantes pour proteger les moteurs
-    if (posCoude > 180) posCoude = 180;
-    if (posCoude < 0)   posCoude = 0;
-    
-    if (posPoignetRot > 180) posPoignetRot = 180;
-    if (posPoignetRot < 0)   posPoignetRot = 0;
-    
-    if (posPoignetVer > 180) posPoignetVer = 180;
-    if (posPoignetVer < 0)   posPoignetVer = 0;
-    
-    if (posPince > 90) posPince = 90;
-    if (posPince < 25) posPince = 25;
+    else 
+    {
+        //moyennage des valeurs
+        for(int i = 0; i < N; i++)
+        {
+          moyenneX  += x1[i];
+          moyenneY  += y1[i];
+          moyenneZ  += z1[i];
+          moyenneX2 += x2[i];
+          moyenneY2 += y2[i];
+        }
+
+        moyenneX  /= N;
+        moyenneY  /= N;
+        moyenneZ  /= N;
+        moyenneX2 /= N;
+        moyenneY2 /= N;
+        
+        //recupere les valeurs émises par la PWM
+        posCoude      = map(moyenneX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
+        posPoignetRot = map(moyenneY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
+        posPoignetVer = map(moyenneX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
+        posPince      = map(moyenneY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
+        
+        //sature en cas de valeurs trop importantes pour proteger les moteurs
+        if (posCoude > 180) posCoude = 180;
+        if (posCoude < 0)   posCoude = 0;
+        
+        if (posPoignetRot > 180) posPoignetRot = 180;
+        if (posPoignetRot < 0)   posPoignetRot = 0;
+        
+        if (posPoignetVer > 180) posPoignetVer = 180;
+        if (posPoignetVer < 0)   posPoignetVer = 0;
+        
+        if (posPince > 90) posPince = 90;
+        if (posPince < 25) posPince = 25;
+    }
 }

@@ -146,7 +146,7 @@ void miseEnForme()
     x2[cmp] = analogRead(A3);
     y2[cmp] = analogRead(A4);
     
-    if ((x1[cmp] == 0 && y1[cmp] && z1[cmp]) || (x2[cmp] == 0 && y2[cmp]))
+    if ((x1[cmp] == 0 && y1[cmp] == 0 && z1[cmp] == 0) || (x2[cmp] == 0 && y2[cmp] == 0))
     {
         Braccio.positionDroite();
     }

@@ -3,9 +3,9 @@
  * de l'acceléromètre avant de les transmettre au robot
  */
 
-#include<SPI.h>
-#include<nRF24L01.h>
-#include<RF24.h>
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
 
 RF24 radio(7, 8);
 const byte address[6] = "00001";
@@ -17,27 +17,30 @@ struct data
     short zAxis;
 } receive_data;
 
-//valeurs extremes recues par la radio 1
+//valeurs extremes recues par la radio 1 (valeurs positives)
 struct c_radio1
 {
-    const short xMin = 260;
+    const short xMin = 265;
     const short xMax = 415;
     
-    const short yMin = 255;
+    const short yMin = 260;
     const short yMax = 405;
     
-    const short zMin = 270;
-    const short zMax = 420;
+    const short zMin = 265;
+    const short zMax = 410;
 } c_radio1;
 
-//valeurs extremes recues par la radio 2
+//valeurs extremes recues par la radio 2 (valeurs négatives)
 struct c_radio2
 {
-    const short xMin = 280;
-    const short xMax = 435;
+    const short xMin = 270;
+    const short xMax = 415;
   
     const short yMin = 265;
-    const short yMax = 405;
+    const short yMax = 415;
+
+    const short zMin = 270;
+    const short zMax = 420;
 } c_radio2;
 
 //Pin analog de sortie pour la PWM
@@ -56,13 +59,16 @@ short xPWM, yPWM, zPWM, xPWM2, yPWM2;
 void setup() 
 {
     Serial.begin(9600);
+    Serial.print(__FILE__); Serial.println(" initialising ...");
     
     radio.begin();
     radio.openReadingPipe(0,address);
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_2MBPS);
     radio.startListening();
+    Serial.print(__FILE__); Serial.println(" ready !");
 }
+
 
 // ---------------------------------------- //
 // -                LOOP                  - //

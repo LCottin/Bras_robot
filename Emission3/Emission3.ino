@@ -12,7 +12,6 @@ const byte x_out = A0;
 const byte y_out = A1;
 const byte z_out = A2;
 
-//RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
 RF24 radio(9,10); //emission avec Arduino Nano-rf
 const byte address[6] = "00001";
 
@@ -37,7 +36,7 @@ void setup()
     radio.setDataRate(RF24_2MBPS);
     radio.stopListening();
 
-    send_data.id = 2;
+    send_data.id = 3;
 }
 
 // ---------------------------------------- //

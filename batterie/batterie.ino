@@ -9,13 +9,13 @@ enum led {ROUGE = 3,
           VERT1 = 9, VERT2 = 10, VERT3 = 11};
 
 //Stocke les pins des leds
-const byte pinLed[6] = {3, 5, 6, 9, 10, 11}
+const byte pinLed[6] = {3, 5, 6, 9, 10, 11};
 
 //Pin de lecture de la tension de la batterie
 const byte tension = A0;
 
 //Différents paliers pour allumer ou non les led
-const short paliers[7] = {827, 850, 873, 896, 920, 943, 966}
+const short paliers[7] = {827, 850, 873, 896, 920, 943, 966};
 
 
 // ---------------------------------------- //
@@ -42,7 +42,7 @@ void loop()
 
   Serial.println(lecture);
 
-  if(lecture < palier[0])
+  if(lecture < paliers[0])
   {
     //Toutes les led sont éteintes
     for (int i = 0; i < 6; i++)
@@ -51,7 +51,7 @@ void loop()
     }
   }
 
-  else if((lecture >= palier[0] )&& (lecture < palier[1]))
+  else if((lecture >= paliers[0] )&& (lecture < paliers[1]))
   {
     //La premiere led s'allume progressivement
     analogWrite(ROUGE, map(lecture, 827, 850, 0, 255));
@@ -62,7 +62,7 @@ void loop()
     }
   }
 
-  else if((lecture >= palier[1] )&& (lecture < palier[2]))
+  else if((lecture >= paliers[1] )&& (lecture < paliers[2]))
   {
     //La premiere led est allumé et la seconde s'allume progressivement
     digitalWrite(ROUGE, HIGH);
@@ -75,7 +75,7 @@ void loop()
     }
   }
 
-  else if((lecture >= palier[2] )&& (lecture < palier[3]))
+  else if((lecture >= paliers[2] )&& (lecture < paliers[3]))
   {
     //Les 2 premières led sont allumées et la 3e s'allume progressivement
     digitalWrite(ROUGE, HIGH);
@@ -89,7 +89,7 @@ void loop()
     }
   }
 
-  else if((lecture >= palier[3] )&& (lecture < palier[4]))
+  else if((lecture >= paliers[3] )&& (lecture < paliers[4]))
   {
     //Les 3 premières led sont allumées et la 4e s'allume progressivement
     digitalWrite(ROUGE, HIGH);
@@ -104,7 +104,7 @@ void loop()
     }
   }
 
-  else if((lecture >= palier[4] )&& (lecture < palier[5]))
+  else if((lecture >= paliers[4] )&& (lecture < paliers[5]))
   {
     //Les 4 premières led sont allumées et la 5e s'allume progressivement
     digitalWrite(ROUGE, HIGH);
@@ -120,7 +120,7 @@ void loop()
     }
   }
 
-  else if((lecture >= palier[5] )&& (lecture < palier[6]))
+  else if((lecture >= paliers[5] )&& (lecture < paliers[6]))
   {
     //Les 5 premières led sont allumées et la 6e s'allume progressivement
     digitalWrite(ROUGE, HIGH);
@@ -132,7 +132,7 @@ void loop()
     analogWrite(VERT3, map(lecture, 943, 966, 0, 255));
   }
 
-  else if(lecture >= palier[6])
+  else if(lecture >= paliers[6])
   {
     //Toutes les led sont allumées
     for (int i = 0; i < 6; i++)

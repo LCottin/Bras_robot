@@ -19,6 +19,7 @@ const byte address[6] = "00001";
 //structure de données pour l'envoie des inclinaisons 
 struct dataToSend
 {
+    short id;
     short xAxis;
     short yAxis;
     short zAxis;
@@ -35,6 +36,8 @@ void setup()
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_2MBPS);
     radio.stopListening();
+
+    send_data.id = 2;
 }
 
 // ---------------------------------------- //
@@ -43,9 +46,9 @@ void setup()
 void loop() 
 {
     //lecture des données sur les 3 axes et inversion de signe
-    send_data.xAxis = -1*analogRead(x_out);
-    send_data.yAxis = -1*analogRead(y_out);
-    send_data.zAxis = -1*analogRead(z_out);
+    send_data.xAxis = analogRead(x_out);
+    send_data.yAxis = analogRead(y_out);
+    send_data.zAxis = analogRead(z_out);
 
     //envoie des données lues
     radio.write(&send_data, sizeof(dataToSend));

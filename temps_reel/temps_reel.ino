@@ -44,10 +44,12 @@ struct V_MAX1
     const short YMIN = 260; 
     const short YMAX = 405;
     const short YMOY = (YMIN + YMAX)/2;
-    
+
+    /*
     const short ZMIN = 265;
     const short ZMAX = 410;
     const short ZMOY = (ZMIN + ZMAX)/2;
+    */
 } V_MAX1; 
 
 //Valeurs extremes en analogread pour la radio 2
@@ -60,10 +62,11 @@ struct V_MAX2
     const short YMIN = 265;
     const short YMAX = 415;
     const short YMOY = (YMIN + YMAX)/2;
-  
+    /*
     const short ZMIN = 270;
     const short ZMAX = 420;
     const short ZMOY = (ZMIN + ZMAX)/2;
+    */
 } V_MAX2;
 
 //Valeurs extremes recues pour la radio 3
@@ -73,18 +76,19 @@ struct V_MAX3
     const short XMAX = 415;
     const short XMOY = (XMIN + XMAX)/2;
       
-    const short YMIN = 265;
-    const short YMAX = 415;
+    const short YMIN = 260;
+    const short YMAX = 405;
     const short YMOY = (YMIN + YMAX)/2;
-  
+    /*
     const short ZMIN = 270;
     const short ZMAX = 420;
     const short ZMOY = (ZMIN + ZMAX)/2;
+    */
 } V_MAX3;
 
 // les buffers echantillons pour le moyennage
 const byte N = 5;
-unsigned byte cmp = 0;
+unsigned short cmp = 0;
 short x1[N];
 short y1[N];
 
@@ -99,12 +103,10 @@ struct data
   short id;
   short xAxis;
   short yAxis;
-  short zAxis;
+  //short zAxis; //non utilisé
 } receive_data;
 
-int tmp; //variable temporaire pour le décodage des données
 char buff[20]; //buffer temporaire pour le décodage des données
-char i = 0; //variable temporaire pour le décodage des données
 
 
 // ---------------------------------------- //
@@ -134,19 +136,10 @@ void setup()
 void loop() 
 {
     buff[0] = 0;
-    i = 0;
+    char i = 0;
     const byte vitesse  = T_RAPIDE;
     const short latence = 0;
-    /*
-    while (Serial.available())  
-    {
-  
-      buff[i++] = Serial.read();
-      //Serial.write(buff[i-1]);
-      //Serial.println(" ");
-      
-    }
-    */
+    
     Serial.readBytesUntil('#', buff, 13);
     
     if(buff[0]){
@@ -164,19 +157,23 @@ void loop()
 // -      MISE EN FORME DES DONNEES       - //
 // ---------------------------------------- //
 
-void miseEnFormeDonnee(struct data * data, char*buff)
+void miseEnFormeDonnee(struct data* data, char* buff)
 {
   int j = 0;
   int tmp;
   short test;
   char buffinter[] = {0, 0, 0, 0, 0, 0};
-  if(buff[1] != ';' || buff[5] != ';' || buff[9] != ';')
+  char* pos_debut;
+  char* pos_fin;
+  
+  if(buff[1] != ';' || buff[5] != ';')
   {
     //Serial.println("Pb de transmission ou pas de donnée transmis");
     
   }
   else
   {
+    // 1er champ : id
     buffinter[0] = buff[0];
     buffinter[1] = 0;
     test = atoi(buffinter);
@@ -190,6 +187,39 @@ void miseEnFormeDonnee(struct data * data, char*buff)
       data->id = test;
     }
 
+    // 2eme champ : x
+    pos_debut = strchr(buff, ';');
+    pos_debut++;
+    pos_fin = strchr(pos_debut, ';');
+    strncpy(buffinter, pos_debut, pos_fin - pos_debut);
+    test = atoi(buffinter);
+    if (test > 450 || test < 250)
+    {
+      //Serial.println("Pb sur x");
+      return;
+    }
+    else
+    {
+      data->xAxis = test;
+    }
+
+    // 3eme champ : y
+    pos_debut = pos_fin + 1;
+    strncpy(buffinter, pos_debut, 3);
+    test = atoi(buffinter);
+
+    if (test > 450 || test < 250)
+    {
+      //Serial.println("Pb sur y");
+      return;
+    }
+    else
+    {
+      data->yAxis = test;
+    }
+    
+    /*
+    // 2eme champ : x
     //tmp = j;
     for(j = 2; buff[j] != ';'; j++)
     {
@@ -207,7 +237,8 @@ void miseEnFormeDonnee(struct data * data, char*buff)
     {
       data->xAxis = test;
     }
-
+    
+    // 3eme champ : y
     tmp = j + 1;
     for(j=j+1; buff[j] != ';'; j++)
     {
@@ -226,6 +257,8 @@ void miseEnFormeDonnee(struct data * data, char*buff)
       data->yAxis = test;
     }
     
+    // 4eme champ : z
+    
     tmp = j + 1;
     for(j=j+1; j < strlen(buff); j++)
     {
@@ -243,6 +276,7 @@ void miseEnFormeDonnee(struct data * data, char*buff)
     {
       data->zAxis = test;
     }
+    */
     
   }
   
@@ -254,6 +288,7 @@ void miseEnFormeDonnee(struct data * data, char*buff)
   Serial.println(data->xAxis);
   Serial.print("En y : ");
   Serial.println(data->yAxis);
+  Serial.println("");
   Serial.print("En z : ");
   Serial.println(data->zAxis);
   Serial.println("");
@@ -315,6 +350,7 @@ void miseEnForme()
           break;
         //case 4 :
         default :
+          //return;
           break;
     }
     
@@ -322,7 +358,7 @@ void miseEnForme()
     {
         Braccio.positionDroite();
     }
-
+    
     else 
     {
         //moyennage des valeurs
@@ -347,7 +383,7 @@ void miseEnForme()
         moyenneX3 /= N;
         moyenneY3 /= N;
         
-        //recupere les valeurs émises par la PWM
+        //recupere les valeurs émises
         posCoude      = map(moyenneX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
         posPoignetRot = map(moyenneY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
         posPoignetVer = map(moyenneX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);

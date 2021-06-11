@@ -319,7 +319,7 @@ void _Braccio::tournerBase(short valeurAngle, byte vitesse)
   	if (valeurAngle > 180)  valeurAngle = 180;
 	if (vitesse < 10)		vitesse 	= 10;
 	if (vitesse > 30)		vitesse		= 30;
-  	posCoude = valeurAngle;
+  	posBase = valeurAngle;
   	ServoMovement(vitesse, valeurAngle, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
 }
 

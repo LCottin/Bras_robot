@@ -6,6 +6,13 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+
+RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
+const uint64_t Address[] = {0x7878787878LL, 0xB3B4B5B6F1LL, 0xB3B4B5B6CDLL, 0xB3B4B5B6A3LL, 0xB3B4B5B60FLL, 0xB3B4B5B605LL};
+
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 //Premier bouton
@@ -13,6 +20,15 @@ const byte bouton = 2;
 
 void setup() 
 {
+
+  radio.begin();
+  radio.setPALevel(RF24_PA_MAX);
+  radio.setChannel(108);
+  radio.setDataRate(RF24_2MBPS);
+  radio.openReadingPipe(0,Address[0]);
+  radio.openReadingPipe(1,Address[1]);
+  radio.openReadingPipe(2,Address[2]);
+
   // Initialisation
   u8g2.begin();
 

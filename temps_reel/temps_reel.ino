@@ -136,7 +136,6 @@ void setup()
 void loop() 
 {
     buff[0] = 0;
-    char i = 0;
     const byte vitesse  = T_RAPIDE;
     const short latence = 0;
     
@@ -159,8 +158,6 @@ void loop()
 
 void miseEnFormeDonnee(struct data* data, char* buff)
 {
-  int j = 0;
-  int tmp;
   short test;
   char buffinter[] = {0, 0, 0, 0, 0, 0};
   char* pos_debut;

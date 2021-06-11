@@ -4,12 +4,9 @@
 Ce dépôt est le code source d'un projet de deuxième année mené en binôme à l'ENSEIRB-MATMECA. Le but est l'écriture d'une bibliothèque Arduino (C++) permettant de contrôler le bras robot Arduino Braccio.
 
 Plusieurs dossiers sont présents :
-  - temps_reel : le bras robot bouge en fonction des mouvements de l'accéléromètre.
-  - emotion : le bras bouge selon une ou plusieurs séquences (émotion) enregristrée(s).
+  - Controle : permet de controler le bras soit en temps réel (accéléromètre) soit avec des émotions (séquences enregistrées).
   - Emission : envoie les données de l'accéléromètre sans fils depuis un Arduino nano vers l'Arduino uno de contrôle du bras robot, 1e bracelet (ID = 1).
   - Emission2 : envoie les données de l'accéléromètre sans fils depuis un Arduino nano vers l'Arduino uno de contrôle du bras robot, 2e bracelet (ID = 2).
   - Emission3 : envoie les données de l'accéléromètre sans fils depuis un Arduino nano vers l'Arduino uno de contrôle du bras robot, 3e bracelet (ID = 3).
   - Reception : recupère les données envoyées par l'acceléromètre sur un Arduino nano avant de les transmettre au bras via une conversion analogique-numérique.
   - batterie : permet de savoir si la batterie est encore chargée ou non
-
-Il est à noter que les fichiers Braccio.h et Braccio.cpp ne sont pas synchronisés entre les dossiers : toute modification de ces fichiers dans l'un des deux dossiers doit également être faite dans l'autre dossier !

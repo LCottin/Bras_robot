@@ -10,21 +10,27 @@
 //ports de sortie
 const byte x_out = A0;
 const byte y_out = A1;
-const byte z_out = A2;
+//const byte z_out = A2; //pour l'instant l'axe z est inutilisé
 
 //RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
 RF24 radio(9,10); //emission avec Arduino Nano-rf
-const byte address[6] = "00001";
+
+#define EMETTEUR 1 //emetteur numero 1
+
+const uint64_t Address[] = {0x7878787878LL, 0xB3B4B5B6F1LL, 0xB3B4B5B6CDLL, 0xB3B4B5B6A3LL, 0xB3B4B5B60FLL, 0xB3B4B5B605LL };
+const uint64_t monAdresse = Address[ EMETTEUR - 1 ];
 
 //structure de données pour l'envoie des inclinaisons fournies par l'accéléromètre
 struct dataToSend
 {
-    short id;
+    //short id;
     short xAxis;
     short yAxis;
-    short zAxis;
+    //short zAxis;
 } send_data;
 
+//latence d'emission
+int latence = 10;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -33,12 +39,13 @@ void setup()
 {
     //configuration de l'émetteur
     radio.begin();
-    radio.openWritingPipe(address);
+    radio.openWritingPipe(monAdresse);
     radio.setPALevel(RF24_PA_MAX);
+    radio.setChannel(108);
     radio.setDataRate(RF24_2MBPS);
     radio.stopListening();
 
-    send_data.id = 1;
+    //send_data.id = 1;
     
     /*
     //initialisation moniteur serie
@@ -52,10 +59,10 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    //lecture des données sur les 3 axes
+    //lecture des données sur les 2 axes (z inutilisé)
     send_data.xAxis = analogRead(x_out);
     send_data.yAxis = analogRead(y_out);
-    send_data.zAxis = analogRead(z_out);
+    //send_data.zAxis = analogRead(z_out);
 
     /*
     //Affichage des données
@@ -68,5 +75,5 @@ void loop()
     
     //envoie des données lues
     radio.write(&send_data, sizeof(dataToSend));
-    delay(10);
+    delay(latence);
 }

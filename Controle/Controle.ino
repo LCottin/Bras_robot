@@ -38,6 +38,7 @@ short posPoignetVer = 90;
 short posPince      = 90;
 
 
+
 //Valeurs extremes recues pour la radio 1
 struct V_MAX1
 {
@@ -93,6 +94,7 @@ struct V_MAX3
 //Structure pour recevoir les donnees
 struct data 
 {
+  char c;
   short id;
   short xAxis;
   short yAxis;
@@ -134,14 +136,16 @@ double duree;
 //RF24 radio(2, 4);
 const byte adresse[6] = "00001";
 
+char test = 0;
+
 // ---------------------------------------- //
 // -                 SETUP                - //
 // ---------------------------------------- //
 void setup() 
 {  
     Serial.begin(115200);
-    Serial.print("Initialisation de ");
-    Serial.println(__FILE__);
+    //Serial.print("Initialisation de ");
+    //Serial.println(__FILE__);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -155,10 +159,11 @@ void setup()
 //    radio.setDataRate(RF24_2MBPS);
 //    radio.startListening();
 
-    Serial.print(__FILE__);
-    Serial.println(" Prêt !");
+    //Serial.print(__FILE__);
+    //Serial.println(" Prêt !");
     initBufferEchantillons();
-    Serial.flush();
+    //Serial.flush();
+    Serial.write('#');
 }
 
 
@@ -171,14 +176,31 @@ void loop()
     const byte vitesse  = T_RAPIDE;
     const short latence = 0;
     
-    Serial.readBytesUntil('#', buff, 13);
     
-    if(buff[0]){
+    //Serial.readBytesUntil('#', buff, 13);
+
+    //Serial.read((char*)&receive_data, sizeof(receive_data));
+    
+    if(Serial.available()){
+      Serial.readBytes((char*)&receive_data, sizeof(receive_data));
+      /*
+      if(receive_data.id == 4)
+      {
+        test = (test + 1) % 4;
+        //to do : faire un switch case
+        
+        Serial.write(test);
+      }
       //Serial.flush();
       //Serial.println(buff);
-      miseEnFormeDonnee(&receive_data, buff);
+      //miseEnFormeDonnee(&receive_data, buff);
+      else
+      {
+         
+      }*/
       miseEnForme();
       Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+      Serial.write('#');
     }
     
     delay(latence);

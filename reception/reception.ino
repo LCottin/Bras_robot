@@ -28,12 +28,13 @@ struct data
 // valeurs à envoyer à la Uno-Braccio
 struct dataToSend
 {
-  char id[taille];
-  char xAxis[taille];
-  char yAxis[taille];
-  //char zAxis[taille];
+  char c;
+  short id;
+  struct data receive_data;
 } send_data;
 
+char mode;
+char codeRetour;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -41,8 +42,7 @@ struct dataToSend
 void setup() 
 {
     Serial.begin(115200);
-    Serial.print(__FILE__); Serial.println(" initialising ...");
-    
+    send_data.c = 0xAA;
     radio.begin();
     radio.setPALevel(RF24_PA_MAX);
     radio.setChannel(108);
@@ -50,12 +50,11 @@ void setup()
     radio.openReadingPipe(0,Address[0]);
     radio.openReadingPipe(1,Address[1]);
     radio.openReadingPipe(2,Address[2]);
-    //radio.openReadingPipe(3,Address[3]);
+    radio.openReadingPipe(3,Address[3]);
     //radio.openReadingPipe(4,Address[4]);
     //radio.openReadingPipe(5,Address[5]);
+    radio.openWritingPipe(Address[3]);
     radio.startListening();
-    
-    Serial.print(__FILE__); Serial.println(" ready !");
 }
 
 
@@ -66,30 +65,33 @@ void loop()
 {
     while(radio.available(&emetteur)) 
     {
-        radio.read(&receive_data, sizeof(data));
+      if(emetteur != 3)
+      {
+        radio.read(&send_data.receive_data, sizeof(data));
+        send_data.id = emetteur + 1;
+        send_data.c = 0xAA;
+        while(Serial.read() != '#');
+        Serial.write((char*)&send_data, sizeof(send_data));
+      }
+      else
+      {
+        radio.read(&mode, sizeof(char));
+        radio.stopListening();
+        // to do : envoyer les infos à la uno
+        send_data.id = emetteur + 1;
+        send_data.c = mode;
+        //while(Serial.read() != '#');
+        Serial.write((char*)&send_data, sizeof(send_data));
+        while(!Serial.available()){};
+        codeRetour = Serial.read();
+        //while(Serial.read() != '#');
         
-        str[0] = 0;  // réinitialisation du buffer
-
-        // convertion valeurs (short) vers chaines (char*)
-        itoa(emetteur + 1, send_data.id, 10);
-        itoa(receive_data.xAxis, send_data.xAxis, 10);
-        itoa(receive_data.yAxis, send_data.yAxis, 10);
-        //itoa(receive_data.yAxis, send_data.zAxis, 10);
-
-        // création d'une chaine au format '#1;xxx;yyy;zzz#'
-        strcat(str, "#");
-        strcat(str, send_data.id);
-        strcat(str, ";");
-        strcat(str, send_data.xAxis);
-        strcat(str, ";");
-        strcat(str, send_data.yAxis);
-        //strcat(str, ";");
-        //strcat(str, send_data.zAxis);
-        strcat(str, "#");
-        //Serial.println(str);
-        //emetteurSerial.write(str); 
-        Serial.write(str);
+        //delay(50);
+        //Serial.println("recu ! ");
+        radio.write(&codeRetour, sizeof(char));
+        radio.startListening();
+      }
         
-        delay(10);
+      //delay(10);
     }
 }

@@ -6,6 +6,9 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24Network.h>
+
+#define EMETTEUR 3
 
 //ports de sortie
 const byte x_out = A0;
@@ -15,15 +18,19 @@ const byte y_out = A1;
 RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
 //RF24 radio(9,10); //emission avec Arduino Nano-rf
 
-#define EMETTEUR 3 //emetteur numero 3
+RF24Network network(radio);   // Nota : "Network" utilise la librairie "radio"
 
-const uint64_t Address[] = {0x7878787878LL, 0xB3B4B5B6F1LL, 0xB3B4B5B6CDLL, 0xB3B4B5B6A3LL, 0xB3B4B5B60FLL, 0xB3B4B5B605LL };
-const uint64_t monAdresse = Address[ EMETTEUR - 1 ];
+// Réseau
+const uint16_t noeudMere   = 00;                // Valeur "0" écrit au format "octal" (d'où l'autre "0" devant)
+const uint16_t noeudsFille[3] = {010, 011, 012};
+
+const uint16_t monNoeud = noeudsFille[EMETTEUR - 1];
+const uint16_t noeudCible = noeudMere;
 
 //structure de données pour l'envoie des inclinaisons fournies par l'accéléromètre
 struct dataToSend
 {
-    //short id;
+    short id = EMETTEUR - 1;
     short xAxis;
     short yAxis;
     //short zAxis;
@@ -37,15 +44,15 @@ int latence = 10;
 // ---------------------------------------- //
 void setup() 
 {
-    //configuration de l'émetteur
+    //init radio
     radio.begin();
-    radio.openWritingPipe(monAdresse);
     radio.setPALevel(RF24_PA_MAX);
-    radio.setChannel(108);
     radio.setDataRate(RF24_2MBPS);
+    
     radio.stopListening();
 
-    //send_data.id = 3;
+    //init network
+    network.begin(108, monNoeud);
     
     /*
     //initialisation moniteur serie
@@ -59,21 +66,21 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    //lecture des données sur les 2 axes (z inutilisé)
+    network.update();
+    
+    RF24NetworkHeader nHeader(monNoeud);
+
     send_data.xAxis = analogRead(x_out);
     send_data.yAxis = analogRead(y_out);
-    //send_data.zAxis = analogRead(z_out);
-
-    /*
+    
+    network.write(nHeader, &send_data, sizeof(send_data));  
+  
+  /*
     //Affichage des données
-    Serial.println("Emetteur 3 envoie : ");
+    Serial.println("Emetteur 1 envoie : ");
     Serial.print("en x : "); Serial.println(send_data.xAxis);
     Serial.print("en y : "); Serial.println(send_data.yAxis);
     Serial.print("en z : "); Serial.println(send_data.zAxis);
     Serial.println("");
-    */
-    
-    //envoie des données lues
-    radio.write(&send_data, sizeof(dataToSend));
-    delay(latence);
+  */
 }

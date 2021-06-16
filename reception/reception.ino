@@ -31,16 +31,24 @@ struct data
 };
 
 struct data temp;
-struct data data0;
-struct data data1;
-struct data data2;
+//struct data data0;
+//struct data data1;
+//struct data data2;
 
 // valeurs à envoyer à la Uno-Braccio
 struct dataToSend
 {
-  char c;
-  struct data allData[3]= {data0, data1, data2};
+  short bouger;
+  short posBase;
+  short posEpaule;
+  short posCoude; 
+  short posPoignetRot;
+  short posPoignetVer;
+  short posPince;
+  //struct data allData[3]= {data0, data1, data2};
 } send_data;
+
+char recu;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -52,7 +60,6 @@ void setup()
     SPI.begin();
     
     //init radio
-    send_data.c = 0xAA;
     radio.begin();
     radio.setPALevel(RF24_PA_MAX);
     radio.setDataRate(RF24_2MBPS);
@@ -76,7 +83,23 @@ void loop()
       RF24NetworkHeader nHeader;
       network.read(nHeader, &temp, sizeof(temp));
 
-      send_data.allData[temp.id] = temp;
+      switch (temp.id)
+      {
+        case 3 :
+          send_data.posBase = temp.xAxis;
+          send_data.posEpaule = temp.yAxis;
+          break;
+
+        case 1 :
+          send_data.posCoude = temp.xAxis;
+          send_data.posPoignetRot = temp.yAxis;
+          break;
+          
+        case 2 :
+          send_data.posPoignetVer = temp.xAxis;
+          send_data.posPince = temp.yAxis;
+          break;
+      }
 
       /*
       Serial.println("Données : ");
@@ -90,6 +113,16 @@ void loop()
       delay(20);
       */
     }
-    
-    Serial.write((char*)&send_data, sizeof(send_data));
+
+    send_data.bouger = 999;
+
+    if (Serial.available())
+    {
+      recu = Serial.read();
+      if (recu == 0)
+      {
+        Serial.write((char*)&send_data, sizeof(send_data));
+        delay(200);
+      }
+    }
 }

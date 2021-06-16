@@ -91,24 +91,30 @@ struct V_MAX3
     */
 } V_MAX3;
 
-// valeurs reçu par le module RF
-struct data 
-{
-    short id;
-    short xAxis;
-    short yAxis;
-    //short zAxis; // inutilisé
-};
-
-struct data data0;
-struct data data1;
-struct data data2;
+//// valeurs reçu par le module RF
+//struct data 
+//{
+//    short id;
+//    short xAxis;
+//    short yAxis;
+//    //short zAxis; // inutilisé
+//};
+//
+//struct data data0;
+//struct data data1;
+//struct data data2;
 
 // valeurs à envoyer à la Uno-Braccio
-struct dataToSend
+struct dataToRead
 {
-  char c;
-  struct data allData[3]= {data0, data1, data2};
+  short bouger;
+  short posBase;
+  short posEpaule;
+  short posCoude; 
+  short posPoignetRot;
+  short posPoignetVer;
+  short posPince;
+  //struct data allData[3]= {data0, data1, data2};
 } receive_data;
 
 
@@ -138,6 +144,7 @@ byte vitesse;
 //Pour mesurer le temps d'execution d'un programme
 unsigned long tempsDebut, tempsFin;
 double duree;
+char message = 'o';
 
 // ---------------------------------------- //
 // -                 SETUP                - //
@@ -145,6 +152,7 @@ double duree;
 void setup() 
 {  
     Serial.begin(115200);
+    SPI.begin();
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -153,6 +161,8 @@ void setup()
   
     initBufferEchantillons();
     delay(3000);
+    Serial.write((char*)&message, sizeof(message));
+    
 }
 
 
@@ -161,27 +171,66 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    const byte vitesse  = T_RAPIDE;
+    const byte vitesse  = LENT;
     const short latence = 0;
-    
+
+    Serial.write((char*)&message, sizeof(message));
+
     if(Serial.available())
     {
       //lecture des données
-      Serial.read((char*)&receive_data, sizeof(receive_data));
-    
-    if (receive_data.id == 0xAA)
-    {
-      //moyennage
-      miseEnForme();
+      Serial.readBytes((char*)&receive_data, sizeof(receive_data));
+/*
+      Serial.println("Données : ");
+      Serial.print("\t posBase       = "); Serial.println(receive_data.posBase);
+      Serial.print("\t posEpaule     = "); Serial.println(receive_data.posEpaule);
+      Serial.print("\t posCoude      = "); Serial.println(receive_data.posCoude);
+      Serial.print("\t posPoignetVer = "); Serial.println(receive_data.posPoignetVer);
+      Serial.print("\t posPoignetRot = "); Serial.println(receive_data.posPoignetRot);
+      Serial.print("\t posPince      = "); Serial.println(receive_data.posPince);
+      Serial.print("\t bouger = "); Serial.println(receive_data.bouger);
+*/     
+      if (receive_data.bouger == 999)
+      {
+        //moyennage
+        //miseEnForme();
+        
+        //affecte les positions des moteurs avec un mapping
+        posCoude      = map(receive_data.posCoude,      V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
+        posPoignetRot = map(receive_data.posPoignetRot, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
+        posPoignetVer = map(receive_data.posPoignetVer, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
+        posPince      = map(receive_data.posPince,      V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
+        posBase       = map(receive_data.posBase,       V_MAX3.XMIN, V_MAX3.XMAX, 0, 180);
+        posEpaule     = map(receive_data.posEpaule,     V_MAX3.YMIN, V_MAX3.YMAX, 15, 165);
+        
+        //sature en cas de valeurs trop importantes pour proteger les moteurs
+        if (posCoude > 180) posCoude = 180;
+        if (posCoude < 0)   posCoude = 0;
+        
+        if (posPoignetRot > 180) posPoignetRot = 180;
+        if (posPoignetRot < 0)   posPoignetRot = 0;
+        
+        if (posPoignetVer > 180) posPoignetVer = 180;
+        if (posPoignetVer < 0)   posPoignetVer = 0;
+        
+        if (posPince > 90) posPince = 90;
+        if (posPince < 25) posPince = 25;
 
-      //mouvement
-      Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+        if (posBase > 180) posBase = 180;
+        if (posBase < 0)   posBase = 0;
+
+        if (posEpaule > 165) posEpaule = 165;
+        if (posEpaule < 15)  posEpaule = 15;
+        
+        //mouvement
+        Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+      }
+  
+      else 
+        Braccio.positionDroite();
+        
+      delay(latence);
     }
-
-    else 
-      Braccio.positionDroite();
-      
-    delay(latence);
     
 }
 
@@ -224,12 +273,12 @@ void miseEnForme()
     short moyenneY3 = 0;
 
     //lectures des 4 entrées 
-    x1[cmp] = receive_data.allData[0].xAxis;
-    y1[cmp] = receive_data.allData[0].yAxis;
-    x2[cmp] = receive_data.allData[1].xAxis;
-    y2[cmp] = receive_data.allData[1].yAxis;
-    x3[cmp] = receive_data.allData[2].xAxis;
-    y3[cmp] = receive_data.allData[2].yAxis;
+    x1[cmp] = receive_data.posBase;
+    y1[cmp] = receive_data.posEpaule;
+    x2[cmp] = receive_data.posCoude;
+    y2[cmp] = receive_data.posPoignetRot;
+    x3[cmp] = receive_data.posPoignetVer;
+    y3[cmp] = receive_data.posPince;
     
     //si l'un des couples de données est nul, on met le robot droit
     if ((x1[cmp] == 0 && y1[cmp] == 0) || (x2[cmp] == 0 && y2[cmp] == 0) || (x3[cmp] == 0 && y3[cmp] == 0))
@@ -266,8 +315,8 @@ void miseEnForme()
         posPoignetRot = map(moyenneY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
         posPoignetVer = map(moyenneX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
         posPince      = map(moyenneY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
-        posBase       = map(moyenneX3, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
-        posEpaule     = map(moyenneY3, V_MAX2.YMIN, V_MAX2.YMAX, 15, 165);
+        posBase       = map(moyenneX3, V_MAX3.XMIN, V_MAX3.XMAX, 0, 180);
+        posEpaule     = map(moyenneY3, V_MAX3.YMIN, V_MAX3.YMAX, 15, 165);
         
         //sature en cas de valeurs trop importantes pour proteger les moteurs
         if (posCoude > 180) posCoude = 180;

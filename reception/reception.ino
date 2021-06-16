@@ -70,7 +70,7 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    network.update(); //MAJ du réseau
+    network.update(); //MAJ du réseau 
     
     while(network.available())
     {

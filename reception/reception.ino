@@ -39,7 +39,6 @@ struct data data2;
 struct dataToSend
 {
   char c;
-  //struct data* allData[3] = {data0, data1, data2};
   struct data allData[3]= {data0, data1, data2};
 } send_data;
 
@@ -78,7 +77,8 @@ void loop()
       network.read(nHeader, &temp, sizeof(temp));
 
       send_data.allData[temp.id] = temp;
-      
+
+      /*
       Serial.println("Données : ");
       Serial.print("\t posBase       = "); Serial.println(send_data.allData[0].xAxis);
       Serial.print("\t posEpaule     = "); Serial.println(send_data.allData[0].yAxis);
@@ -88,9 +88,8 @@ void loop()
       Serial.print("\t posPince      = "); Serial.println(send_data.allData[2].yAxis);
       Serial.println("");
       delay(20);
+      */
     }
-
-   
-  //Serial.write((char*)&send_data, sizeof(send_data));
-
+    
+    Serial.write((char*)&send_data, sizeof(send_data));
 }

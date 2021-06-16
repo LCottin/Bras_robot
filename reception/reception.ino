@@ -7,54 +7,62 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24Network.h>
 
 RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
 //RF24 radio(9,10); //emission avec Arduino Nano-rf
-const uint64_t Address[] = {0x7878787878LL, 0xB3B4B5B6F1LL, 0xB3B4B5B6CDLL, 0xB3B4B5B6A3LL, 0xB3B4B5B60FLL, 0xB3B4B5B605LL };
-byte emetteur; //buffer correspondant à l'adresse d'un éméteur
 
-char str[20]; // buffer temporaire pour la récupération de données
-const char taille = 4; //taille max des valeurs converties en chaine
+RF24Network network(radio);   // Nota : "Network" utilise la librairie "radio"
+
+// Réseau
+const uint16_t noeudMere   = 00;     // Valeur "0" écrit au format "octal" (d'où l'autre "0" devant)
+const uint16_t noeudFille1 = 010;     // Valeur "1" écrit au format "octal" (d'où l'autre "0" devant)
+const uint16_t noeudFille2 = 011;   // Valeur "11" écrit au format "octal" (d'où l'autre "0" devant)
+const uint16_t noeudFille3 = 013;   // Valeur "12" écrit au format "octal" (d'où l'autre "0" devant)
+
+const uint16_t monNoeud = noeudMere;
+const uint16_t noeudCible = noeudMere;
 
 // valeurs reçu par le module RF
 struct data 
 {
-    //short id;
+    short id;
     short xAxis;
     short yAxis;
     //short zAxis; // inutilisé
-} receive_data;
+};
+
+struct data temp;
+struct data data0;
+struct data data1;
+struct data data2;
 
 // valeurs à envoyer à la Uno-Braccio
 struct dataToSend
 {
   char c;
-  short id;
-  struct data receive_data;
+  //struct data* allData[3] = {data0, data1, data2};
+  struct data allData[3]= {data0, data1, data2};
 } send_data;
-
-char mode;
-char codeRetour;
 
 // ---------------------------------------- //
 // -                SETUP                 - //
 // ---------------------------------------- //
 void setup() 
 {
+    //init serial
     Serial.begin(115200);
+
+    //init radio
     send_data.c = 0xAA;
     radio.begin();
     radio.setPALevel(RF24_PA_MAX);
-    radio.setChannel(108);
     radio.setDataRate(RF24_2MBPS);
-    radio.openReadingPipe(0,Address[0]);
-    radio.openReadingPipe(1,Address[1]);
-    radio.openReadingPipe(2,Address[2]);
-    radio.openReadingPipe(3,Address[3]);
-    //radio.openReadingPipe(4,Address[4]);
-    //radio.openReadingPipe(5,Address[5]);
-    radio.openWritingPipe(Address[3]);
+
     radio.startListening();
+
+    //init network
+    network.begin(108, monNoeud);
 }
 
 
@@ -63,6 +71,99 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
+    network.update(); //MAJ du réseau
+    
+    while(network.available())
+    {
+      RF24NetworkHeader nHeader(monNoeud);
+      network.read(nHeader, &temp, sizeof(temp));
+
+      switch (temp.id)
+      {
+        case 1 :
+          data0 = temp;
+          break;
+          
+        case 2 : 
+          data1 = temp;
+          break;
+
+        case 3:
+          data2 = temp;
+          break;
+
+        default : 
+          break;
+      }
+    }
+
+     
+    Serial.println("Données : ");
+    Serial.print("\t posBase       = "); Serial.println(send_data.allData[0].xAxis);
+    Serial.print("\t posEpaule     = "); Serial.println(send_data.allData[0].yAxis);
+    Serial.print("\t posCoude      = "); Serial.println(send_data.allData[1].xAxis);
+    Serial.print("\t posPoignetVer = "); Serial.println(send_data.allData[1].yAxis);
+    Serial.print("\t posPoignetRot = "); Serial.println(send_data.allData[2].xAxis);
+    Serial.print("\t posPince      = "); Serial.println(send_data.allData[2].yAxis);
+    Serial.println("");
+    
+  //Serial.write((char*)&send_data, sizeof(send_data));
+
+  /*
+   *
+    byte bracelet[3] = {0, 1, 2};
+    byte pipNum = 0;
+    int i = 0;
+
+//    for (int i = 0; i < 3; i++)
+//    {
+//      if (radio.available(&pipNum))
+//      {
+//        Serial.print("Données recues du bracelet n° "); Serial.println(pipNum);
+//      }
+//      delay(100);
+//    }
+
+    if(radio.available(&pipNum))
+    {
+      Serial.print("Données recues du bracelet n° "); Serial.println(pipNum);
+      Serial.println(i++);
+      Serial.println();
+    }
+    delay(200);
+
+
+      
+      while ( (radio.available(&emetteur) == false) && (timeout == false) )
+      {
+        if (millis() - startTimer > 100) 
+        {
+          timeout = true; 
+          break;
+        }
+      }
+
+      if (timeout)
+      {
+          //Serial.print("Bracelet n°"); Serial.println(i + 1);
+          //Serial.println("Timeout");
+          //Serial.print("emetteur "); Serial.println(emetteur);
+          timeout = false;
+          //continue; 
+      }
+      
+      else 
+      {
+        //stocke les infos dans la structure
+        radio.read(&send_data.allData[i], sizeof(send_data.allData[i]));
+        radio.stopListening();
+        Serial.print("Bracelet n°"); 
+        Serial.println(i + 1);
+        Serial.println("ok !");
+      }
+    }
+  
+  
     while(radio.available(&emetteur)) 
     {
       if(emetteur != 3)
@@ -72,7 +173,7 @@ void loop()
         send_data.c = 0xAA;
         while(Serial.read() != '#');
         Serial.write((char*)&send_data, sizeof(send_data));
-      }
+      } 
       else
       {
         radio.read(&mode, sizeof(char));
@@ -94,4 +195,5 @@ void loop()
         
       //delay(10);
     }
+    */
 }

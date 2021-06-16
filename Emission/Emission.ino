@@ -82,7 +82,7 @@ void loop()
     send_data.yAxis = analogRead(y_out);
     
     network.write(nHeader, &send_data, sizeof(send_data));  
-  
+   
   /*
     //Affichage des données
     Serial.println("Emetteur 1 envoie : ");

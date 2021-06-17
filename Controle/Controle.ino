@@ -5,7 +5,6 @@
 #include "Braccio.h"
 
 //bibliothèques pour la comminucation sans fils
-#include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
 
@@ -39,7 +38,7 @@ short posPince      = 90;
 
 
 
-//Valeurs extremes recues pour la radio 1
+//Valeurs extremes recues pour la radio 1 (coude / poignet rot)
 struct V_MAX1
 {
     const short XMIN = 265;
@@ -57,7 +56,7 @@ struct V_MAX1
     */
 } V_MAX1; 
 
-//Valeurs extremes en analogread pour la radio 2
+//Valeurs extremes en analogread pour la radio 2 ( poignetVer / pince)
 struct V_MAX2
 {
     const short XMIN = 270;
@@ -74,7 +73,7 @@ struct V_MAX2
     */
 } V_MAX2;
 
-//Valeurs extremes recues pour la radio 3
+//Valeurs extremes recues pour la radio 3 (base / epaule)
 struct V_MAX3
 {
     const short XMIN = 270;
@@ -91,23 +90,10 @@ struct V_MAX3
     */
 } V_MAX3;
 
-//// valeurs reçu par le module RF
-//struct data 
-//{
-//    short id;
-//    short xAxis;
-//    short yAxis;
-//    //short zAxis; // inutilisé
-//};
-//
-//struct data data0;
-//struct data data1;
-//struct data data2;
-
 // valeurs à envoyer à la Uno-Braccio
 struct dataToRead
 {
-  short bouger;
+  //short bouger;
   short posBase;
   short posEpaule;
   short posCoude; 
@@ -144,7 +130,7 @@ byte vitesse;
 //Pour mesurer le temps d'execution d'un programme
 unsigned long tempsDebut, tempsFin;
 double duree;
-char message = 'o';
+int somme;
 
 // ---------------------------------------- //
 // -                 SETUP                - //
@@ -152,16 +138,13 @@ char message = 'o';
 void setup() 
 {  
     Serial.begin(115200);
-    SPI.begin();
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
     delay(100);
     Braccio.positionDroite();
-  
     initBufferEchantillons();
-    delay(3000);
-    Serial.write((char*)&message, sizeof(message));
+    //Serial.write((char*)&message, sizeof(message));
     
 }
 
@@ -171,30 +154,62 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    const byte vitesse  = LENT;
+    const byte vitesse  = RAPIDE;
     const short latence = 0;
 
-    Serial.write((char*)&message, sizeof(message));
+    //Serial.write((char*)&message, sizeof(message));
 
     if(Serial.available())
     {
+      
       //lecture des données
-      Serial.readBytes((char*)&receive_data, sizeof(receive_data));
-/*
+      Serial.readBytesUntil('c', (char*)&receive_data, sizeof(receive_data));
+
+
       Serial.println("Données : ");
       Serial.print("\t posBase       = "); Serial.println(receive_data.posBase);
       Serial.print("\t posEpaule     = "); Serial.println(receive_data.posEpaule);
       Serial.print("\t posCoude      = "); Serial.println(receive_data.posCoude);
-      Serial.print("\t posPoignetVer = "); Serial.println(receive_data.posPoignetVer);
       Serial.print("\t posPoignetRot = "); Serial.println(receive_data.posPoignetRot);
+      Serial.print("\t posPoignetVer = "); Serial.println(receive_data.posPoignetVer);
       Serial.print("\t posPince      = "); Serial.println(receive_data.posPince);
-      Serial.print("\t bouger = "); Serial.println(receive_data.bouger);
-*/     
-      if (receive_data.bouger == 999)
+
+       
+//      Serial.write((byte*)&receive_data, sizeof(receive_data));
+      //if (receive_data.bouger == 999)
       {
         //moyennage
-        //miseEnForme();
-        
+        //lectures des 4 entrées 
+        somme = 0;
+
+        //posBase
+        somme += abs(receive_data.posBase) > V_MAX3.XMAX ? 1 : 0;
+        somme += abs(receive_data.posBase) < V_MAX3.XMIN ? 1 : 0;
+
+        //posEpaule
+        somme += abs(receive_data.posEpaule) > V_MAX3.YMAX ? 1 : 0;
+        somme += abs(receive_data.posEpaule) < V_MAX3.YMIN ? 1 : 0;
+
+        //posCoude
+        somme += abs(receive_data.posCoude) > V_MAX1.XMAX ? 1 : 0;
+        somme += abs(receive_data.posCoude) < V_MAX1.XMIN ? 1 : 0;
+
+        //pos rot
+        somme += abs(receive_data.posPoignetRot) > V_MAX1.YMAX ? 1 : 0;
+        somme += abs(receive_data.posPoignetRot) < V_MAX1.YMIN ? 1 : 0;
+
+        //pos ver
+        somme += abs(receive_data.posPoignetVer) > V_MAX2.XMAX ? 1 : 0;
+        somme += abs(receive_data.posPoignetVer) < V_MAX2.XMIN ? 1 : 0;
+
+        //pos ver
+        somme += abs(receive_data.posPince) > V_MAX2.YMAX ? 1 : 0;
+        somme += abs(receive_data.posPince) < V_MAX2.YMIN ? 1 : 0;
+
+        if (somme != 0) return;
+        Serial.println("fuaifygvpimaumiaugpi  cou ydbociuyv uycp  iyt ");
+        miseEnForme();
+        /*
         //affecte les positions des moteurs avec un mapping
         posCoude      = map(receive_data.posCoude,      V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
         posPoignetRot = map(receive_data.posPoignetRot, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
@@ -221,15 +236,16 @@ void loop()
 
         if (posEpaule > 165) posEpaule = 165;
         if (posEpaule < 15)  posEpaule = 15;
-        
+        */
         //mouvement
         Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
       }
-  
+      /*
       else 
         Braccio.positionDroite();
         
       delay(latence);
+      */
     }
     
 }
@@ -263,8 +279,8 @@ void miseEnForme()
     cmp = (cmp + 1) % NB_MOYENNAGE;
     
     //variables temporaires pour moyennage
-    short moyenneX = 0;
-    short moyenneY = 0;
+    short moyenneX1 = 0;
+    short moyenneY1 = 0;
     
     short moyenneX2 = 0;
     short moyenneY2 = 0;
@@ -272,7 +288,6 @@ void miseEnForme()
     short moyenneX3 = 0;
     short moyenneY3 = 0;
 
-    //lectures des 4 entrées 
     x1[cmp] = receive_data.posBase;
     y1[cmp] = receive_data.posEpaule;
     x2[cmp] = receive_data.posCoude;
@@ -291,8 +306,8 @@ void miseEnForme()
         //moyennage des valeurs
         for(i = 0; i < NB_MOYENNAGE; i++)
         {
-          moyenneX  += x1[i];
-          moyenneY  += y1[i];
+          moyenneX1  += x1[i];
+          moyenneY1  += y1[i];
           
           moyenneX2 += x2[i];
           moyenneY2 += y2[i];
@@ -301,8 +316,8 @@ void miseEnForme()
           moyenneY3 += y3[i];
         }
 
-        moyenneX  /= NB_MOYENNAGE;
-        moyenneY  /= NB_MOYENNAGE;
+        moyenneX1  /= NB_MOYENNAGE;
+        moyenneY1  /= NB_MOYENNAGE;
 
         moyenneX2 /= NB_MOYENNAGE;
         moyenneY2 /= NB_MOYENNAGE;
@@ -311,8 +326,8 @@ void miseEnForme()
         moyenneY3 /= NB_MOYENNAGE;
         
         //affecte les positions des moteurs avec un mapping
-        posCoude      = map(moyenneX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
-        posPoignetRot = map(moyenneY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
+        posCoude      = map(moyenneX1, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
+        posPoignetRot = map(moyenneY1, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
         posPoignetVer = map(moyenneX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
         posPince      = map(moyenneY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
         posBase       = map(moyenneX3, V_MAX3.XMIN, V_MAX3.XMAX, 0, 180);

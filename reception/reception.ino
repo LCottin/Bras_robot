@@ -21,6 +21,8 @@ const uint16_t noeudsFille[3] = {01, 02, 03};
 const uint16_t monNoeud = noeudMere;
 const uint16_t noeudCible = noeudMere;
 
+enum BRACELET {BRACELET1, BRACELET2, BRACELET3};
+
 // valeurs reçu par le module RF
 struct data 
 {
@@ -38,17 +40,17 @@ struct data temp;
 // valeurs à envoyer à la Uno-Braccio
 struct dataToSend
 {
-  short bouger;
-  short posBase;
-  short posEpaule;
-  short posCoude; 
-  short posPoignetRot;
-  short posPoignetVer;
-  short posPince;
+  //short bouger;
+  short posBase = 300;
+  short posEpaule = 300;
+  short posCoude = 300; 
+  short posPoignetRot = 300;
+  short posPoignetVer = 300;
+  short posPince = 300;
   //struct data allData[3]= {data0, data1, data2};
 } send_data;
 
-char recu;
+char message = 'c';
 
 // ---------------------------------------- //
 // -                SETUP                 - //
@@ -85,35 +87,36 @@ void loop()
 
       switch (temp.id)
       {
-        case 3 :
+        case BRACELET3 :
           send_data.posBase = temp.xAxis;
           send_data.posEpaule = temp.yAxis;
           break;
 
-        case 1 :
+        case BRACELET1 :
           send_data.posCoude = temp.xAxis;
           send_data.posPoignetRot = temp.yAxis;
           break;
           
-        case 2 :
+        case BRACELET2 :
           send_data.posPoignetVer = temp.xAxis;
           send_data.posPince = temp.yAxis;
           break;
       }
 
-      /*
+    /*      
       Serial.println("Données : ");
-      Serial.print("\t posBase       = "); Serial.println(send_data.allData[0].xAxis);
-      Serial.print("\t posEpaule     = "); Serial.println(send_data.allData[0].yAxis);
-      Serial.print("\t posCoude      = "); Serial.println(send_data.allData[1].xAxis);
-      Serial.print("\t posPoignetVer = "); Serial.println(send_data.allData[1].yAxis);
-      Serial.print("\t posPoignetRot = "); Serial.println(send_data.allData[2].xAxis);
-      Serial.print("\t posPince      = "); Serial.println(send_data.allData[2].yAxis);
+      Serial.print("\t posBase       = "); Serial.println(send_data.posBase);
+      Serial.print("\t posEpaule     = "); Serial.println(send_data.posEpaule);
+      Serial.print("\t posCoude      = "); Serial.println(send_data.posCoude);
+      Serial.print("\t posPoignetRot = "); Serial.println(send_data.posPoignetRot);
+      Serial.print("\t posPoignetVer = "); Serial.println(send_data.posPoignetVer);
+      Serial.print("\t posPince      = "); Serial.println(send_data.posPince);
       Serial.println("");
       delay(20);
       */
     }
 
+    /*
     send_data.bouger = 999;
 
     if (Serial.available())
@@ -124,5 +127,9 @@ void loop()
         Serial.write((char*)&send_data, sizeof(send_data));
         delay(200);
       }
-    }
+//    }*/
+    Serial.write((char*)&message, sizeof(message));
+    Serial.write((char*)&send_data, sizeof(send_data));
+    Serial.write((char*)&message, sizeof(message));
+    delay(50);
 }

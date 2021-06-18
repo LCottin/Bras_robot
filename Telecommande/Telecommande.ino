@@ -26,12 +26,12 @@ enum BOUTON {PIN_HAUT = 2, PIN_BAS = 3, PIN_PLAY = 4, PIN_PAUSE = 5, PIN_STOP = 
 
 //Interéaction avec l'écran
 const byte NOMBRE_ORDRES = 4;
-byte numOrdre; 
+short numOrdre = 3; 
 
 enum ACTION {RIEN = 10, PLAY = 11, PAUSE = 12, STOP = 13};
 
-const char* ordreTexte[]     = {"Colere", "Joie", "Surprise", "T_Reel"};
-const char  ordre[NOMBRE_ORDRES]   = {0, 1, 2, 3};
+const char ordreTexte[NOMBRE_ORDRES][10] = {"Colere", "Joie", "Surprise", "Controle"};
+const byte ordre[NOMBRE_ORDRES]          = {0, 1, 2, 3};
 
 //structure de données pour l'envoie des ordres
 struct dataToSend
@@ -74,6 +74,8 @@ void setup()
       u8g2.drawStr(10, 20, "Init ...");
       delay(500);
     } while (u8g2.nextPage());
+    
+    u8g2.clear();
 }
 
 void loop() 
@@ -83,71 +85,93 @@ void loop()
   
     if (digitalRead(PIN_HAUT) == HIGH)
     {
+        u8g2.clear();
         
-        numOrdre = (numOrdre + 1) % NOMBRE_ORDRES;
-        u8g2.firstPage();
-        do 
+        numOrdre = (numOrdre + 1) % (short)NOMBRE_ORDRES;
+        
+        while (digitalRead(PIN_HAUT) == HIGH)
         {
-          u8g2.setFont(u8g2_font_ncenB14_tr);
-          u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-        } while (u8g2.nextPage());
+          u8g2.firstPage();
+          do 
+          {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+          } while (u8g2.nextPage());
+        }
         u8g2.clear();
     }
     
     else if (digitalRead(PIN_BAS) == HIGH)
     {
+        u8g2.clear();
+       
+        numOrdre--;
+        numOrdre = numOrdre < 0 ? (short)(NOMBRE_ORDRES - 1): numOrdre;
         
-        numOrdre = (numOrdre - 1) % NOMBRE_ORDRES;
-        u8g2.firstPage();
-        do 
-        {
-          u8g2.setFont(u8g2_font_ncenB14_tr);
-          u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-        } while (u8g2.nextPage());
+        while (digitalRead(PIN_BAS) == HIGH)
+        { 
+          u8g2.firstPage();
+          do 
+          {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+          } while (u8g2.nextPage());
+        }
         u8g2.clear();
     }
     
     else if (digitalRead(PIN_PLAY) == HIGH)
     {
-        
-        u8g2.firstPage();
-        do 
+        u8g2.clear();
+        while (digitalRead(PIN_PLAY) == HIGH)
         {
-          u8g2.setFont(u8g2_font_ncenB14_tr);
-          u8g2.drawStr(10, 20, "En cours : ");
-          u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-        } while (u8g2.nextPage());
+          u8g2.firstPage();
+          do 
+          {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(10, 20, "En cours : ");
+            u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+          } while (u8g2.nextPage());
+        }
         send_data.mode = ordre[numOrdre];
         u8g2.clear();
     }
     
     else if (digitalRead(PIN_PAUSE) == HIGH)
     {
-        
-        do 
+        u8g2.clear();
+        while (digitalRead(PIN_PAUSE) == HIGH)
         {
-          u8g2.setFont(u8g2_font_ncenB14_tr);
-          u8g2.drawStr(10, 50, "Pause");
-        } while (u8g2.nextPage());
-        send_data.mode = PAUSE;
+          u8g2.firstPage();
+          do 
+          {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(10, 50, "Pause");
+          } while (u8g2.nextPage());
+          send_data.mode = PAUSE;
+        }
         u8g2.clear();
     }
     
     else if (digitalRead(PIN_STOP) == HIGH)
     {
-        
-        do 
+        u8g2.clear();
+        while (digitalRead(PIN_STOP) == HIGH)
         {
-          u8g2.setFont(u8g2_font_ncenB14_tr);
-          u8g2.drawStr(10, 50, "STOP");
-        } while (u8g2.nextPage());
-        send_data.mode = STOP;
+          u8g2.firstPage();
+          do 
+          {
+            u8g2.setFont(u8g2_font_ncenB14_tr);
+            u8g2.drawStr(10, 50, "STOP");
+          } while (u8g2.nextPage());
+          send_data.mode = STOP;
+        }
         u8g2.clear();
     }
     
     else
     {
-        
+        u8g2.firstPage();
         do 
         {
           u8g2.setFont(u8g2_font_ncenB14_tr);
@@ -160,19 +184,5 @@ void loop()
     //envoie sur le réseau
     RF24NetworkHeader nHeader(noeudMere);
     network.write(nHeader, &send_data, sizeof(send_data));
-    delay(100);
-}
-
-void nettoieEcran()
-{
-    do 
-    {
-      for (int i = 0; i < 128; i++)
-      {
-        for (int j = 0; j < 100; j++)
-        {
-          u8g2.drawStr(i, j, " ");
-        }
-      }
-    } while (u8g2.nextPage());
+    //delay(100);
 }

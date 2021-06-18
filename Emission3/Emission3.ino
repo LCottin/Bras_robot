@@ -2,55 +2,69 @@
  * Code permettant d'envoyer les données 
  * de l'acceléromètre au robot
  */
-
+#include <stdlib.h>
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24Network.h>
 
-//ports de sortie
-const byte x_out = A0;
-const byte y_out = A1;
-//const byte z_out = A2; //pour l'instant l'axe z est inutilisé
+#define EMETTEUR 3
 
-RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
-//RF24 radio(9,10); //emission avec Arduino Nano-rf
+#if EMETTEUR == 3
+  RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
+#else
+  RF24 radio(9,10); //emission avec Arduino Nano-rf
+#endif
 
-#define EMETTEUR 3 //emetteur numero 3
-
-const uint64_t Address[] = {0x7878787878LL, 0xB3B4B5B6F1LL, 0xB3B4B5B6CDLL, 0xB3B4B5B6A3LL, 0xB3B4B5B60FLL, 0xB3B4B5B605LL };
-const uint64_t monAdresse = Address[ EMETTEUR - 1 ];
+RF24Network network(radio);   // Nota : "Network" utilise la librairie "radio"
 
 //structure de données pour l'envoie des inclinaisons fournies par l'accéléromètre
 struct dataToSend
 {
-    //short id;
+    short id = EMETTEUR - 1;
     short xAxis;
     short yAxis;
-    //short zAxis;
 } send_data;
 
-//latence d'emission
-int latence = 10;
+// Réseau
+const uint16_t noeudMere      = 00; // Valeur "0" écrit au format "octal" (d'où l'autre "0" devant)
+const uint16_t noeudsFille[3] = {01, 02, 03};
+
+const uint16_t monNoeud   = noeudsFille[EMETTEUR - 1];
+const uint16_t noeudCible = noeudMere;
+
+//variables du moyennage
+const byte NB_MOYENNAGE = 5; //doit etre impair !!
+short X[NB_MOYENNAGE];
+short Y[NB_MOYENNAGE];
+byte cmp = 0;
+short moyX;
+short moyY;
+
+//ports de sortie de l'accéléromètre
+const byte x_out = A0;
+const byte y_out = A1;
+
 
 // ---------------------------------------- //
 // -                SETUP                 - //
 // ---------------------------------------- //
 void setup() 
 {
-    //configuration de l'émetteur
+    SPI.begin();
+    
+    //init radio
     radio.begin();
-    radio.openWritingPipe(monAdresse);
     radio.setPALevel(RF24_PA_MAX);
-    radio.setChannel(108);
     radio.setDataRate(RF24_2MBPS);
+    
     radio.stopListening();
 
-    //send_data.id = 3;
-    
-    /*
-    //initialisation moniteur serie
-    Serial.begin(9600);
-    */
+    //init network
+    network.begin(108, monNoeud);
+
+    //init buffer moyennage
+    initMoyennage();
 }   
 
 
@@ -59,21 +73,46 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    //lecture des données sur les 2 axes (z inutilisé)
-    send_data.xAxis = analogRead(x_out);
-    send_data.yAxis = analogRead(y_out);
-    //send_data.zAxis = analogRead(z_out);
-
-    /*
-    //Affichage des données
-    Serial.println("Emetteur 3 envoie : ");
-    Serial.print("en x : "); Serial.println(send_data.xAxis);
-    Serial.print("en y : "); Serial.println(send_data.yAxis);
-    Serial.print("en z : "); Serial.println(send_data.zAxis);
-    Serial.println("");
-    */
+    //definition des constantes
+    cmp = (cmp + 1) % NB_MOYENNAGE;
     
-    //envoie des données lues
-    radio.write(&send_data, sizeof(dataToSend));
-    delay(latence);
+    //MAJ du réseau
+    network.update();
+
+    //lecture des données de l'accelromètre
+    X[cmp] = analogRead(x_out);
+    Y[cmp] = analogRead(y_out);
+
+    //moyennage et affectation = filtre médian glissant
+    qsort(X, NB_MOYENNAGE, sizeof(short), compare);
+    qsort(Y, NB_MOYENNAGE, sizeof(short), compare);
+
+    send_data.xAxis = X[NB_MOYENNAGE / 2];
+    send_data.yAxis = Y[NB_MOYENNAGE / 2];
+  
+    //envoie des données
+    RF24NetworkHeader nHeader(noeudCible);
+    network.write(nHeader, &send_data, sizeof(send_data)); 
+}
+
+
+// ---------------------------------------- //
+// -     INITIALISATION DES BUFFERS       - //
+// ---------------------------------------- //
+void initMoyennage()
+{
+  for(byte i = 0; i < NB_MOYENNAGE; i++)
+    {
+      X[i] = 300;
+      Y[i] = 300;
+    }
+}
+
+
+// ---------------------------------------- //
+// -              COMPARAISON             - //
+// ---------------------------------------- //
+int compare (const void * a, const void * b) 
+{
+   return ( *(int*)a - *(int*)b );
 }

@@ -2,10 +2,10 @@
  * Ce code permet de controler le bras robot 
 **/
 
+#include <stdlib.h>
 #include "Braccio.h"
 
 //bibliothèques pour la comminucation sans fils
-#include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
 
@@ -21,7 +21,11 @@
         - 10: la pince est ouverte, 
         - 90: la pince est fermée.
 */
- 
+
+// ---------------------------------------- //
+// -         VARAIABLES GLOBALES          - //
+// ---------------------------------------- //
+
 Servo base;      //pour tourner sur la base
 Servo shoulder;  //servo 2, en bas
 Servo elbow;     //servo 3, central
@@ -37,87 +41,32 @@ short posPoignetRot = 90;
 short posPoignetVer = 90;
 short posPince      = 90;
 
-
-
-//Valeurs extremes recues pour la radio 1
-struct V_MAX1
+//Valeurs extremes recues par les radios
+struct V_MAX
 {
-    const short XMIN = 265;
-    const short XMAX = 415;
+    const short XMIN = 260;
+    const short XMAX = 420;
     const short XMOY = (XMIN + XMAX)/2;
     
     const short YMIN = 260; 
-    const short YMAX = 405;
+    const short YMAX = 420;
     const short YMOY = (YMIN + YMAX)/2;
+} vMax; 
 
-    /*
-    const short ZMIN = 265;
-    const short ZMAX = 410;
-    const short ZMOY = (ZMIN + ZMAX)/2;
-    */
-} V_MAX1; 
-
-//Valeurs extremes en analogread pour la radio 2
-struct V_MAX2
+// valeurs à envoyer à la Uno-Braccio
+struct dataToRead
 {
-    const short XMIN = 270;
-    const short XMAX = 415;
-    const short XMOY = (XMIN + XMAX)/2;
-      
-    const short YMIN = 265;
-    const short YMAX = 415;
-    const short YMOY = (YMIN + YMAX)/2;
-    /*
-    const short ZMIN = 270;
-    const short ZMAX = 420;
-    const short ZMOY = (ZMIN + ZMAX)/2;
-    */
-} V_MAX2;
-
-//Valeurs extremes recues pour la radio 3
-struct V_MAX3
-{
-    const short XMIN = 270;
-    const short XMAX = 415;
-    const short XMOY = (XMIN + XMAX)/2;
-      
-    const short YMIN = 260;
-    const short YMAX = 405;
-    const short YMOY = (YMIN + YMAX)/2;
-    /*
-    const short ZMIN = 270;
-    const short ZMAX = 420;
-    const short ZMOY = (ZMIN + ZMAX)/2;
-    */
-} V_MAX3;
-
-//Structure pour recevoir les donnees
-struct data 
-{
-  char c;
-  short id;
-  short xAxis;
-  short yAxis;
-  //short zAxis; //non utilisé
-} receive_data;
+  short posBase;
+  short posEpaule;
+  short posCoude; 
+  short posPoignetRot;
+  short posPoignetVer;
+  short posPince;
+} received_data;
 
 
-// ---------------------------------------- //
-// -         VARAIABLES GLOBALES          - //
-// ---------------------------------------- //
 //moyennage
-const byte N = 5;
-short x1[N];
-short y1[N];
-
-short x2[N];
-short y2[N];
-
-short x3[N];
-short y3[N];
-
-//Compteur 
-unsigned short cmp = 0;
+const byte NB_MOYENNAGE = 9;
 
 //Compteur de boucle global
 short i;
@@ -125,18 +74,26 @@ short i;
 //definition de la vitesse des moteurs
 byte vitesse;
 
-//buffer temporaire pour le décodage des données
-char buff[20];
-
 //Pour mesurer le temps d'execution d'un programme
 unsigned long tempsDebut, tempsFin;
 double duree;
 
-//Pour le module SF
-//RF24 radio(2, 4);
-const byte adresse[6] = "00001";
+byte cmp = 0;
+short x1[NB_MOYENNAGE];
+short y1[NB_MOYENNAGE];
+short x2[NB_MOYENNAGE];
+short y2[NB_MOYENNAGE];
+short x3[NB_MOYENNAGE];
+short y3[NB_MOYENNAGE];
+//variables temporaires pour moyennage
+short moyenneX1 = 0;
+short moyenneY1 = 0;
 
-char test = 0;
+short moyenneX2 = 0;
+short moyenneY2 = 0;
+
+short moyenneX3 = 0;
+short moyenneY3 = 0;
 
 // ---------------------------------------- //
 // -                 SETUP                - //
@@ -144,26 +101,13 @@ char test = 0;
 void setup() 
 {  
     Serial.begin(115200);
-    //Serial.print("Initialisation de ");
-    //Serial.println(__FILE__);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
     delay(100);
-    Braccio.positionDroite();
-  
-    /* ROUTINE POUR LA SF */
-//    radio.begin();
-//    radio.openReadingPipe(0, adresse);
-//    radio.setPALevel(RF24_PA_MAX);
-//    radio.setDataRate(RF24_2MBPS);
-//    radio.startListening();
+    Braccio.positionDroite();   
 
-    //Serial.print(__FILE__);
-    //Serial.println(" Prêt !");
     initBufferEchantillons();
-    //Serial.flush();
-    Serial.write('#');
 }
 
 
@@ -172,196 +116,74 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    buff[0] = 0;
     const byte vitesse  = T_RAPIDE;
-    const short latence = 0;
     
-    
-    //Serial.readBytesUntil('#', buff, 13);
+    if(Serial.available())
+    {
+        //lecture des données
+        Serial.readBytesUntil('c', (char*)&received_data, sizeof(received_data));
 
-    //Serial.read((char*)&receive_data, sizeof(receive_data));
-    
-    if(Serial.available()){
-      Serial.readBytes((char*)&receive_data, sizeof(receive_data));
-      /*
-      if(receive_data.id == 4)
-      {
-        test = (test + 1) % 4;
-        //to do : faire un switch case
+        //rejets des valeurs abbérantes
+        int somme = 0;
         
-        Serial.write(test);
-      }
-      //Serial.flush();
-      //Serial.println(buff);
-      //miseEnFormeDonnee(&receive_data, buff);
-      else
-      {
-         
-      }*/
-      miseEnForme();
-      Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-      Serial.write('#');
+        //posBase
+        somme += abs(received_data.posBase) > vMax.XMAX ? 1 : 0;
+        somme += abs(received_data.posBase) < vMax.XMIN ? 1 : 0;
+        
+        //posEpaule
+        somme += abs(received_data.posEpaule) > vMax.YMAX ? 1 : 0;
+        somme += abs(received_data.posEpaule) < vMax.YMIN ? 1 : 0;
+        
+        //posCoude
+        somme += abs(received_data.posCoude) > vMax.XMAX ? 1 : 0;
+        somme += abs(received_data.posCoude) < vMax.XMIN ? 1 : 0;
+        
+        //pos rot
+        somme += abs(received_data.posPoignetRot) > vMax.YMAX ? 1 : 0;
+        somme += abs(received_data.posPoignetRot) < vMax.YMIN ? 1 : 0;
+        
+        //pos ver
+        somme += abs(received_data.posPoignetVer) > vMax.XMAX ? 1 : 0;
+        somme += abs(received_data.posPoignetVer) < vMax.XMIN ? 1 : 0;
+        
+        //pos ver
+        somme += abs(received_data.posPince) > vMax.YMAX ? 1 : 0;
+        somme += abs(received_data.posPince) < vMax.YMIN ? 1 : 0;
+
+        //si la somme est non nulle, l'une des conditions n'est pas remplie
+        if (somme != 0) return;
+
+        //mouvement
+        miseEnForme();
+        /*
+        Serial.print("\t posBase       = "); Serial.println(posBase);
+        Serial.print("\t posEpaule     = "); Serial.println(posEpaule);
+        Serial.print("\t posCoude      = "); Serial.println(posCoude);
+        Serial.print("\t posPoignetRot = "); Serial.println(posPoignetRot);
+        Serial.print("\t posPoignetVer = "); Serial.println(posPoignetVer);
+        Serial.print("\t posPince      = "); Serial.println(posPince);
+        Serial.println();*/
+        
+        Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
     }
-    
-    delay(latence);
 }
 
-
-// ---------------------------------------- //
-// -      MISE EN FORME DES DONNEES       - //
-// ---------------------------------------- //
-void miseEnFormeDonnee(struct data* data, char* buff)
-{
-  short test;
-  char buffinter[] = {0, 0, 0, 0, 0, 0};
-  char* pos_debut;
-  char* pos_fin;
-  
-  if(buff[1] != ';' || buff[5] != ';')
-  {
-    //Serial.println("Pb de transmission ou pas de donnée transmis");
-    
-  }
-  else
-  {
-    // 1er champ : id
-    buffinter[0] = buff[0];
-    buffinter[1] = 0;
-    test = atoi(buffinter);
-    if (test > 4 || test < 1)
-    {
-      //Serial.println("Pb sur l'id");
-      return;
-    }
-    else
-    {
-      data->id = test;
-    }
-
-    // 2eme champ : x
-    pos_debut = strchr(buff, ';');
-    pos_debut++;
-    pos_fin = strchr(pos_debut, ';');
-    strncpy(buffinter, pos_debut, pos_fin - pos_debut);
-    test = atoi(buffinter);
-    if (test > 450 || test < 250)
-    {
-      //Serial.println("Pb sur x");
-      return;
-    }
-    else
-    {
-      data->xAxis = test;
-    }
-
-    // 3eme champ : y
-    pos_debut = pos_fin + 1;
-    strncpy(buffinter, pos_debut, 3);
-    test = atoi(buffinter);
-
-    if (test > 450 || test < 250)
-    {
-      //Serial.println("Pb sur y");
-      return;
-    }
-    else
-    {
-      data->yAxis = test;
-    }
-    
-    /*
-    // 2eme champ : x
-    //tmp = j;
-    for(j = 2; buff[j] != ';'; j++)
-    {
-      buffinter[j - 2] = buff[j];
-    }
-    buffinter[3] = 0;
-    test = atoi(buffinter);
-
-    if (test > 450 || test < 250)
-    {
-      //Serial.println("Pb sur x");
-      return;
-    }
-    else
-    {
-      data->xAxis = test;
-    }
-    
-    // 3eme champ : y
-    tmp = j + 1;
-    for(j=j+1; buff[j] != ';'; j++)
-    {
-      buffinter[j - tmp] = buff[j];
-    }
-    buffinter[tmp] = 0;
-    test = atoi(buffinter);
-
-    if (test > 450 || test < 250)
-    {
-      //Serial.println("Pb sur y");
-      return;
-    }
-    else
-    {
-      data->yAxis = test;
-    }
-    
-    // 4eme champ : z
-    
-    tmp = j + 1;
-    for(j=j+1; j < strlen(buff); j++)
-    {
-      buffinter[j - tmp] = buff[j];
-    }
-    buffinter[tmp] = 0;
-    test = atoi(buffinter);
-
-    if (test > 450 || test < 250)
-    {
-      //Serial.println("Pb sur z");
-      return;
-    }
-    else
-    {
-      data->zAxis = test;
-    }
-    */
-    
-  }
-  
-  /*
-  Serial.print("Bracelet n°");
-  Serial.println(data->id);
-  Serial.println("Données reçu ");
-  Serial.print("En x : ");
-  Serial.println(data->xAxis);
-  Serial.print("En y : ");
-  Serial.println(data->yAxis);
-  Serial.println("");
-  Serial.print("En z : ");
-  Serial.println(data->zAxis);
-  Serial.println("");
-  */
-}
-
-
+      
 // ---------------------------------------- //
 // -     INITIALISATION DES BUFFERS       - //
 // ---------------------------------------- //
 void initBufferEchantillons()
 {
-  for(i = 0; i < N; i++)
+  for(i = 0; i < NB_MOYENNAGE; i++)
     {
-      x1[i] = V_MAX1.XMOY;
-      y1[i] = V_MAX1.YMOY;
+      x1[i] = vMax.XMOY;
+      y1[i] = vMax.YMOY;
       
-      x2[i] = V_MAX2.XMOY;
-      y2[i] = V_MAX2.XMOY;
+      x2[i] = vMax.XMOY;
+      y2[i] = vMax.YMOY;
 
-      x3[i] = V_MAX3.XMOY;
-      y3[i] = V_MAX3.XMOY;
+      x3[i] = vMax.XMOY;
+      y3[i] = vMax.YMOY;
     }
 }
 
@@ -372,101 +194,58 @@ void initBufferEchantillons()
 void miseEnForme()
 {
     //mise à jour comteur
-    cmp = (cmp + 1) % N;
+    cmp = (cmp + 1) % NB_MOYENNAGE;
+
+    //lecture des donnees
+    x1[cmp] = received_data.posBase;
+    y1[cmp] = received_data.posEpaule;
+    x2[cmp] = received_data.posCoude;
+    y2[cmp] = received_data.posPoignetRot;
+    x3[cmp] = received_data.posPoignetVer;
+    y3[cmp] = received_data.posPince;
+
+    //tri des tableaux
+    qsort(x1, NB_MOYENNAGE, sizeof(short), compare);
+    qsort(y1, NB_MOYENNAGE, sizeof(short), compare);
+    qsort(x2, NB_MOYENNAGE, sizeof(short), compare);
+    qsort(y2, NB_MOYENNAGE, sizeof(short), compare);
+    qsort(x3, NB_MOYENNAGE, sizeof(short), compare);
+    qsort(y3, NB_MOYENNAGE, sizeof(short), compare);
+
+    //recupération de la valeur médiane
+    moyenneX1 = x1[NB_MOYENNAGE / 2];
+    moyenneX2 = x2[NB_MOYENNAGE / 2];
+    moyenneX3 = x3[NB_MOYENNAGE / 2];
+    moyenneY1 = y1[NB_MOYENNAGE / 2];
+    moyenneY2 = y2[NB_MOYENNAGE / 2];
+    moyenneY3 = y3[NB_MOYENNAGE / 2];
     
-    //variables temporaires pour moyennage
-    short moyenneX = 0;
-    short moyenneY = 0;
+    //affecte les positions des moteurs avec un mapping
+    posBase       = map(moyenneX1, vMax.XMIN, vMax.XMAX, 0, 180);
+    posEpaule     = map(moyenneY1, vMax.YMIN, vMax.YMAX, 15, 165);
+    posCoude      = map(moyenneX2, vMax.XMIN, vMax.XMAX, 0, 180);
+    posPoignetRot = map(moyenneY2, vMax.YMIN, vMax.YMAX, 0, 180);
+    posPoignetVer = map(moyenneX3, vMax.XMIN, vMax.XMAX, 0, 180);
+    posPince      = map(moyenneY3, vMax.YMIN, vMax.YMAX, 25, 90);
     
-    short moyenneX2 = 0;
-    short moyenneY2 = 0;
+    //sature en cas de valeurs trop importantes pour proteger les moteurs
+    if (posBase > 180) posBase = 180;
+    if (posBase < 0)   posBase = 0;
     
-    short moyenneX3 = 0;
-    short moyenneY3 = 0;
-
-    //lectures des 4 entrées et maj du buffer
-    switch(receive_data.id)
-    {
-        case 1 :
-          x1[cmp] = receive_data.xAxis;
-          y1[cmp] = receive_data.yAxis;
-          break;
-        case 2 :
-          x2[cmp] = receive_data.xAxis;
-          y2[cmp] = receive_data.yAxis;
-          break;
-        case 3 :
-          x3[cmp] = receive_data.xAxis;
-          y3[cmp] = receive_data.yAxis;
-          break;
-        //case 4 :
-        default :
-          //return;
-          break;
-    }
+    if (posEpaule > 165) posEpaule = 165;
+    if (posEpaule < 15)  posEpaule = 15;
+    if (posCoude > 180) posCoude = 180;
+    if (posCoude < 0)   posCoude = 0;
     
-    if ((x1[cmp] == 0 && y1[cmp] == 0) || (x2[cmp] == 0 && y2[cmp] == 0) || (x3[cmp] == 0 && y3[cmp] == 0))
-    {
-        Braccio.positionDroite();
-    }
+    if (posPoignetRot > 180) posPoignetRot = 180;
+    if (posPoignetRot < 0)   posPoignetRot = 0;
     
-    else 
-    {
-        //moyennage des valeurs
-        for(i = 0; i < N; i++)
-        {
-          moyenneX  += x1[i];
-          moyenneY  += y1[i];
-          
-          moyenneX2 += x2[i];
-          moyenneY2 += y2[i];
-
-          moyenneX3 += x3[i];
-          moyenneY3 += y3[i];
-        }
-
-        moyenneX  /= N;
-        moyenneY  /= N;
-
-        moyenneX2 /= N;
-        moyenneY2 /= N;
-
-        moyenneX3 /= N;
-        moyenneY3 /= N;
-        
-        //recupere les valeurs émises
-        posCoude      = map(moyenneX, V_MAX1.XMIN, V_MAX1.XMAX, 0, 180);
-        posPoignetRot = map(moyenneY, V_MAX1.YMIN, V_MAX1.YMAX, 0, 180);
-        posPoignetVer = map(moyenneX2, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
-        posPince      = map(moyenneY2, V_MAX2.YMIN, V_MAX2.YMAX, 25, 90);
-        posBase       = map(moyenneX3, V_MAX2.XMIN, V_MAX2.XMAX, 0, 180);
-        posEpaule     = map(moyenneY3, V_MAX2.YMIN, V_MAX2.YMAX, 15, 165);
-        
-        //sature en cas de valeurs trop importantes pour proteger les moteurs
-        if (posCoude > 180) posCoude = 180;
-        if (posCoude < 0)   posCoude = 0;
-        
-        if (posPoignetRot > 180) posPoignetRot = 180;
-        if (posPoignetRot < 0)   posPoignetRot = 0;
-        
-        if (posPoignetVer > 180) posPoignetVer = 180;
-        if (posPoignetVer < 0)   posPoignetVer = 0;
-        
-        if (posPince > 90) posPince = 90;
-        if (posPince < 25) posPince = 25;
-
-        if (posBase > 180) posBase = 180;
-        if (posBase < 0)   posBase = 0;
-
-        if (posEpaule > 165) posEpaule = 165;
-        if (posEpaule < 15)  posEpaule = 15;
-
-        //Serial.print("posCoude : ");
-        //Serial.println(moyenneX2);
-        //Serial.println(moyenneX);
-    }
+    if (posPoignetVer > 180) posPoignetVer = 180;
+    if (posPoignetVer < 0)   posPoignetVer = 0;
+    
+    if (posPince > 90) posPince = 90;
+    if (posPince < 25) posPince = 25;
 }
-
 
 // ---------------------------------------- //
 // -      REINITIALISE LES POSITIONS      - //
@@ -479,6 +258,15 @@ void init1()
     posPoignetRot = 90;
     posPoignetVer = 90;
     posPince      = 90;
+}
+
+
+// ---------------------------------------- //
+// -              COMPARAISON             - //
+// ---------------------------------------- //
+int compare (const void * a, const void * b) 
+{
+   return ( *(int*)a - *(int*)b );
 }
 
 
@@ -548,7 +336,6 @@ void test1()
     delay(2000);
     Braccio.positionDroite();
     delay(2000);
-
   
     vitesse = T_RAPIDE;
     Serial.println("Changement");

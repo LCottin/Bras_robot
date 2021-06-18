@@ -74,11 +74,13 @@ void setup()
 void loop() 
 {
     //definition des constantes
-    cmp = (cmp + 1) % NB_MOYENNAGE;
+    //cmp = (cmp + 1) % NB_MOYENNAGE;
     
     //MAJ du réseau
     network.update();
 
+    //à décommenter si on veut un moyennage
+    /*
     //lecture des données de l'accelromètre
     X[cmp] = analogRead(x_out);
     Y[cmp] = analogRead(y_out);
@@ -89,7 +91,12 @@ void loop()
 
     send_data.xAxis = X[NB_MOYENNAGE / 2];
     send_data.yAxis = Y[NB_MOYENNAGE / 2];
-  
+    */
+    
+    //lecture des données de l'accelromètre
+    send_data.xAxis = analogRead(x_out);
+    send_data.yAxis = analogRead(y_out);
+    
     //envoie des données
     RF24NetworkHeader nHeader(noeudCible);
     network.write(nHeader, &send_data, sizeof(send_data)); 

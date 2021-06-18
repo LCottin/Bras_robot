@@ -6,8 +6,11 @@
 #include "Braccio.h"
 
 //bibliothèques pour la comminucation sans fils
+#include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
+#include <RF24Network.h>
+#include <stdlib.h>
 
 /*
     Step Delay: un délai en millisecondes entre le mouvement de chaque servo. Valeurs autorisées
@@ -26,6 +29,50 @@
 // -         VARAIABLES GLOBALES          - //
 // ---------------------------------------- //
 
+RF24 radio(48,49); //emission avec NRF24l01
+
+RF24Network network(radio);
+
+// Réseau
+const uint16_t noeudMere      = 00;   // Valeur "0" écrit au format "octal" (d'où l'autre "0" devant)
+const uint16_t noeudsFille[3] = {01, 02, 03};
+
+const uint16_t monNoeud = noeudMere;
+const uint16_t noeudCible = noeudMere;
+
+enum BRACELET {Bracelet1, Bracelet2, Bracelet3};
+
+// valeurs reçu par le module RF
+struct data 
+{
+    short id;
+    short xAxis;
+    short yAxis;
+} received_data;
+
+//Valeurs extremes recues par les radios
+struct V_MAX
+{
+    const short XMIN = 260;
+    const short XMAX = 420;
+    const short XMOY = (XMIN + XMAX)/2;
+    
+    const short YMIN = 260; 
+    const short YMAX = 420;
+    const short YMOY = (YMIN + YMAX)/2;
+} vMax; 
+
+// valeurs à envoyer à la Uno-Braccio
+struct dataToSend
+{
+  short posBase       = vMax.XMOY;
+  short posEpaule     = vMax.YMOY;
+  short posCoude      = vMax.XMOY; 
+  short posPoignetRot = vMax.YMOY;
+  short posPoignetVer = vMax.XMOY;
+  short posPince      = vMax.YMOY;
+} local_data;
+
 Servo base;      //pour tourner sur la base
 Servo shoulder;  //servo 2, en bas
 Servo elbow;     //servo 3, central
@@ -41,32 +88,8 @@ short posPoignetRot = 90;
 short posPoignetVer = 90;
 short posPince      = 90;
 
-//Valeurs extremes recues par les radios
-struct V_MAX
-{
-    const short XMIN = 260;
-    const short XMAX = 420;
-    const short XMOY = (XMIN + XMAX)/2;
-    
-    const short YMIN = 260; 
-    const short YMAX = 420;
-    const short YMOY = (YMIN + YMAX)/2;
-} vMax; 
-
-// valeurs à envoyer à la Uno-Braccio
-struct dataToRead
-{
-  short posBase;
-  short posEpaule;
-  short posCoude; 
-  short posPoignetRot;
-  short posPoignetVer;
-  short posPince;
-} received_data;
-
-
 //moyennage
-const byte NB_MOYENNAGE = 9;
+const byte NB_MOYENNAGE = 7;
 
 //Compteur de boucle global
 short i;
@@ -108,6 +131,18 @@ void setup()
     Braccio.positionDroite();   
 
     initBufferEchantillons();
+
+    SPI.begin();
+    
+    //init radio
+    radio.begin();
+    radio.setPALevel(RF24_PA_MAX);
+    radio.setDataRate(RF24_2MBPS);
+
+    radio.startListening();
+
+    //init network
+    network.begin(108, monNoeud);
 }
 
 
@@ -117,7 +152,48 @@ void setup()
 void loop() 
 {
     const byte vitesse  = T_RAPIDE;
+
+    network.update(); //MAJ du réseau 
+
+    //lecture des données dans le réseau    
+    while(network.available())
+    {
+      RF24NetworkHeader nHeader;
+      network.read(nHeader, &received_data, sizeof(received_data));
     
+      //affectation en fonction des id
+      switch (received_data.id)
+      {
+        case Bracelet1 :
+          local_data.posBase       = received_data.xAxis;
+          local_data.posEpaule     = received_data.yAxis;
+          break;
+
+        case Bracelet2 :
+          local_data.posCoude      = received_data.xAxis;
+          local_data.posPoignetRot = received_data.yAxis;
+          break;
+          
+        case Bracelet3 :
+          local_data.posPoignetVer = received_data.xAxis;
+          local_data.posPince      = received_data.yAxis;
+          break;
+      }
+      /*
+      Serial.print("\t posBase       = "); Serial.println(posBase);
+      Serial.print("\t posEpaule     = "); Serial.println(posEpaule);
+      Serial.print("\t posCoude      = "); Serial.println(posCoude);
+      Serial.print("\t posPoignetRot = "); Serial.println(posPoignetRot);
+      Serial.print("\t posPoignetVer = "); Serial.println(posPoignetVer);
+      Serial.print("\t posPince      = "); Serial.println(posPince);
+      Serial.println();
+      */
+      miseEnForme();
+      Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+      //delay(100);
+    }
+      
+    /*
     if(Serial.available())
     {
         //lecture des données
@@ -155,17 +231,18 @@ void loop()
 
         //mouvement
         miseEnForme();
-        /*
-        Serial.print("\t posBase       = "); Serial.println(posBase);
-        Serial.print("\t posEpaule     = "); Serial.println(posEpaule);
-        Serial.print("\t posCoude      = "); Serial.println(posCoude);
-        Serial.print("\t posPoignetRot = "); Serial.println(posPoignetRot);
-        Serial.print("\t posPoignetVer = "); Serial.println(posPoignetVer);
-        Serial.print("\t posPince      = "); Serial.println(posPince);
-        Serial.println();*/
+        
+        //Serial.print("\t posBase       = "); Serial.println(posBase);
+        //Serial.print("\t posEpaule     = "); Serial.println(posEpaule);
+        //Serial.print("\t posCoude      = "); Serial.println(posCoude);
+        //Serial.print("\t posPoignetRot = "); Serial.println(posPoignetRot);
+        //Serial.print("\t posPoignetVer = "); Serial.println(posPoignetVer);
+        //Serial.print("\t posPince      = "); Serial.println(posPince);
+        //Serial.println();
         
         Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
     }
+    */
 }
 
       
@@ -197,12 +274,12 @@ void miseEnForme()
     cmp = (cmp + 1) % NB_MOYENNAGE;
 
     //lecture des donnees
-    x1[cmp] = received_data.posBase;
-    y1[cmp] = received_data.posEpaule;
-    x2[cmp] = received_data.posCoude;
-    y2[cmp] = received_data.posPoignetRot;
-    x3[cmp] = received_data.posPoignetVer;
-    y3[cmp] = received_data.posPince;
+    x1[cmp] = local_data.posBase;
+    y1[cmp] = local_data.posEpaule;
+    x2[cmp] = local_data.posCoude;
+    y2[cmp] = local_data.posPoignetRot;
+    x3[cmp] = local_data.posPoignetVer;
+    y3[cmp] = local_data.posPince;
 
     //tri des tableaux
     qsort(x1, NB_MOYENNAGE, sizeof(short), compare);

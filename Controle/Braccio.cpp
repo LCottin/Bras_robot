@@ -256,13 +256,24 @@ void _Braccio::ServoMovement(int stepDelay, int vBase, int vShoulder, int vElbow
 	}
 }
 
+void _Braccio::resetPos()
+{
+  posBase       = 90;
+  posEpaule     = 95;
+  posCoude      = 95; 
+  posPoignetRot = 90;
+  posPoignetVer = 90;
+  posPince      = 90;
+}
+
 /**
  * Puts the arm straight
  */
 void _Braccio::positionDroite()
 {
 	delay(100);
-	ServoMovement(20,         90, 95, 95, 90, 90,  90);
+  resetPos();
+  ServoMovement(20, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
 	delay(100);
 }
 

@@ -61,6 +61,9 @@ public:
   /* This function makes the arm stand */
   void positionDroite();
 
+  /* Resets positions of every motors */
+  void resetPos();
+
   /**
    * Makes the basement turn 
    * @param valeurAngle New angle of the basement

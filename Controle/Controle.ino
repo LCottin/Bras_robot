@@ -28,7 +28,6 @@
 // ---------------------------------------- //
 // -         VARAIABLES GLOBALES          - //
 // ---------------------------------------- //
-
 RF24 radio(48,49); //emission avec NRF24l01
 
 RF24Network network(radio);
@@ -39,16 +38,6 @@ const uint16_t noeudsFille[3] = {01, 02, 03};
 
 const uint16_t monNoeud = noeudMere;
 const uint16_t noeudCible = noeudMere;
-
-enum BRACELET {Bracelet1, Bracelet2, Bracelet3};
-
-// valeurs reçu par le module RF
-struct data 
-{
-    short id;
-    short xAxis;
-    short yAxis;
-} received_data;
 
 //Valeurs extremes recues par les radios
 struct V_MAX
@@ -61,6 +50,16 @@ struct V_MAX
     const short YMAX = 420;
     const short YMOY = (YMIN + YMAX)/2;
 } vMax; 
+           
+// valeurs reçu par le module RF
+struct data 
+{
+    short id;
+    short xAxis;
+    short yAxis;
+    char mode;
+    char _action;
+} received_data;
 
 // valeurs à envoyer à la Uno-Braccio
 struct dataToSend
@@ -71,6 +70,8 @@ struct dataToSend
   short posPoignetRot = vMax.YMOY;
   short posPoignetVer = vMax.XMOY;
   short posPince      = vMax.YMOY;
+  char mode;
+  char _action;
 } local_data;
 
 Servo base;      //pour tourner sur la base
@@ -88,26 +89,20 @@ short posPoignetRot = 90;
 short posPoignetVer = 90;
 short posPince      = 90;
 
+enum BRACELETS {Bracelet1, Bracelet2, Bracelet3, Telecommande};
+enum ACTIONS {PLAY = 11, PAUSE = 12, STOP = 13};
+enum MODES {COLERE = 20, JOIE = 21, SURPRISE = 22, CONTROLE = 23, RIEN = 24};
+
 //moyennage
-const byte NB_MOYENNAGE = 7;
-
-//Compteur de boucle global
-short i;
-
-//definition de la vitesse des moteurs
-byte vitesse;
-
-//Pour mesurer le temps d'execution d'un programme
-unsigned long tempsDebut, tempsFin;
-double duree;
-
 byte cmp = 0;
+const byte NB_MOYENNAGE = 7;
 short x1[NB_MOYENNAGE];
 short y1[NB_MOYENNAGE];
 short x2[NB_MOYENNAGE];
 short y2[NB_MOYENNAGE];
 short x3[NB_MOYENNAGE];
 short y3[NB_MOYENNAGE];
+
 //variables temporaires pour moyennage
 short moyenneX1 = 0;
 short moyenneY1 = 0;
@@ -118,12 +113,27 @@ short moyenneY2 = 0;
 short moyenneX3 = 0;
 short moyenneY3 = 0;
 
+//Compteur de boucle global
+short i;
+bool droit = true;
+
+//definition de la vitesse des moteurs
+byte vitesse;
+
+//Pour mesurer le temps d'execution d'un programme
+unsigned long tempsDebut;
+double duree;
+
+//etat global 
+volatile bool _pauseGlobal;
+volatile bool _stopGlobal;
+
 // ---------------------------------------- //
 // -                 SETUP                - //
 // ---------------------------------------- //
 void setup() 
 {  
-    Serial.begin(115200);
+    Serial.begin(57600);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
     Braccio.begin();  
@@ -143,6 +153,10 @@ void setup()
 
     //init network
     network.begin(108, monNoeud);
+
+    //init interruption
+    tone(44, 50); //pin, frequence
+    attachInterrupt(digitalPinToInterrupt(21), PauseStop, FALLING);
 }
 
 
@@ -151,47 +165,61 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-    const byte vitesse  = T_RAPIDE;
+      const byte vitesse  = T_RAPIDE;
+     
+      //action en fonction du récépteur
+      switch (local_data.mode)
+      { 
+        case COLERE : 
+          colere();
+          droit = false;
+          break;
 
-    network.update(); //MAJ du réseau 
+        case JOIE :  
+          joie();
+          droit = false;
+          break;
 
-    //lecture des données dans le réseau    
-    while(network.available())
-    {
-      RF24NetworkHeader nHeader;
-      network.read(nHeader, &received_data, sizeof(received_data));
+        case SURPRISE : 
+          surprise();
+          droit = false;
+          break;
+
+        case CONTROLE :
+          local_data._action = PLAY;
+          switch (received_data.id)
+          {
+            case Bracelet1 :
+              local_data.posBase       = received_data.xAxis;
+              local_data.posEpaule     = received_data.yAxis;
+              break;
     
-      //affectation en fonction des id
-      switch (received_data.id)
-      {
-        case Bracelet1 :
-          local_data.posBase       = received_data.xAxis;
-          local_data.posEpaule     = received_data.yAxis;
+            case Bracelet2 :
+              local_data.posCoude      = received_data.xAxis;
+              local_data.posPoignetRot = received_data.yAxis;
+              break;
+              
+            case Bracelet3 :
+              local_data.posPoignetVer = received_data.xAxis;
+              local_data.posPince      = received_data.yAxis;
+              break;
+          }
+          miseEnForme();
+          droit = false;
+          Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
           break;
 
-        case Bracelet2 :
-          local_data.posCoude      = received_data.xAxis;
-          local_data.posPoignetRot = received_data.yAxis;
-          break;
-          
-        case Bracelet3 :
-          local_data.posPoignetVer = received_data.xAxis;
-          local_data.posPince      = received_data.yAxis;
+        case RIEN : 
+        default : 
+          if (droit == false)
+          {
+            Serial.println("Droit");
+            Braccio.positionDroite();
+            droit = true;
+          }
           break;
       }
-      /*
-      Serial.print("\t posBase       = "); Serial.println(posBase);
-      Serial.print("\t posEpaule     = "); Serial.println(posEpaule);
-      Serial.print("\t posCoude      = "); Serial.println(posCoude);
-      Serial.print("\t posPoignetRot = "); Serial.println(posPoignetRot);
-      Serial.print("\t posPoignetVer = "); Serial.println(posPoignetVer);
-      Serial.print("\t posPince      = "); Serial.println(posPince);
-      Serial.println();
-      */
-      miseEnForme();
-      Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-      //delay(100);
-    }
+    
       
     /*
     if(Serial.available())
@@ -264,6 +292,47 @@ void initBufferEchantillons()
     }
 }
 
+// ---------------------------------------- //
+// -        LECTURE PAUSE ET STOP         - //
+// ---------------------------------------- //
+void PauseStop()
+{
+    unsigned long debut = micros();
+    //Serial.println("Debut interrupt");
+    network.update(); //MAJ du réseau 
+
+    RF24NetworkHeader nHeader;
+    network.read(nHeader, &received_data, sizeof(received_data));
+    
+    if (received_data.id == Telecommande)
+    {
+        local_data.mode    = received_data.mode;
+        local_data._action = received_data._action;
+          
+        switch (local_data._action)
+        {
+            case PAUSE :
+              _pauseGlobal = true;
+              _stopGlobal  = false;
+              break;
+
+            case STOP : 
+              _pauseGlobal = false;
+              _stopGlobal  = true;
+              local_data.mode = RIEN;
+              droit = true;
+              break;
+
+            case PLAY : 
+            default:
+              _pauseGlobal = false;
+              _stopGlobal  = false;
+              break;
+        }
+    }  
+    Serial.print("Temps = "); Serial.println((micros() - debut));     
+}
+
 
 // ---------------------------------------- //
 // -      MISE EN FORME DES DONNEES       - //
@@ -311,6 +380,7 @@ void miseEnForme()
     
     if (posEpaule > 165) posEpaule = 165;
     if (posEpaule < 15)  posEpaule = 15;
+    
     if (posCoude > 180) posCoude = 180;
     if (posCoude < 0)   posCoude = 0;
     
@@ -344,6 +414,100 @@ void init1()
 int compare (const void * a, const void * b) 
 {
    return ( *(int*)a - *(int*)b );
+}
+
+
+
+// ---------------------------------------- //
+// -          EMOTION : SURPRISE          - //
+// ---------------------------------------- //
+void surprise()
+{
+    tempsDebut = millis();
+    vitesse = RAPIDE;
+
+    //return en cas de stop, attend en cas de pause
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Serial.println("Debut surprise");
+    
+    Braccio.positionDroite();
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;   
+    Braccio.tournerMain(0, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.tournerMain(180, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+    Braccio.tournerMain(90, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+  
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    
+    Braccio.leverMain(20, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.tournerMain(0, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.leverMain(90, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+  
+    Braccio.tournerCoude(20, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.leverMain(180, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.positionDroite();
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.tournerBase(60, vitesse);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+  
+    Braccio.positionDroite();
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.mainOuverte(T_RAPIDE);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    delay(500);
+    while(_pauseGlobal) {};
+    if (_stopGlobal) return;
+    Braccio.mainFermee(MOYEN);
+    
+  
+    delay(1000);
+    Braccio.positionDroite();
+  
+    duree = millis() - tempsDebut;
+    Serial.print("Temps d'execution de surprise = ");
+    Serial.print(duree/1000);
+    Serial.println("s");
 }
 
 
@@ -536,8 +700,7 @@ void colere()
     delay(1000);
     Braccio.positionDroite();
   
-    tempsFin = millis();
-    duree = tempsFin - tempsDebut;
+    duree = millis() - tempsDebut;
     Serial.print("Temps d'execution de colere = ");
     Serial.print(duree/1000);
     Serial.println("s");
@@ -634,55 +797,8 @@ void joie()
     delay(1000);
     Braccio.positionDroite();
   
-    tempsFin = millis();
-    duree = tempsFin - tempsDebut;
+    duree = millis() - tempsDebut;
     Serial.print("Temps d'execution de joie = ");
-    Serial.print(duree/1000);
-    Serial.println("s");
-}
-
-
-// ---------------------------------------- //
-// -          EMOTION : SURPRISE          - //
-// ---------------------------------------- //
-void surprise()
-{
-    tempsDebut = millis();
-    vitesse = LENT;
-    
-    Braccio.positionDroite();
-    Braccio.tournerMain(0, vitesse);
-    delay(500);
-    Braccio.tournerMain(180, vitesse);
-    delay(500);
-    Braccio.tournerMain(90, vitesse);
-    delay(500);
-  
-    Braccio.leverMain(20, vitesse);
-    delay(500);
-    Braccio.tournerMain(0, vitesse);
-    delay(500);
-    Braccio.leverMain(90, vitesse);
-    delay(500);
-  
-    Braccio.tournerCoude(20, vitesse);
-    Braccio.leverMain(180, vitesse);
-    Braccio.positionDroite();
-    Braccio.tournerBase(60, vitesse);
-    delay(500);
-  
-    Braccio.positionDroite();
-    delay(500);
-    Braccio.mainOuverte(T_RAPIDE);
-    delay(500);
-    Braccio.mainFermee(MOYEN);
-  
-    delay(1000);
-    Braccio.positionDroite();
-  
-    tempsFin = millis();
-    duree = tempsFin - tempsDebut;
-    Serial.print("Temps d'execution de surprise = ");
     Serial.print(duree/1000);
     Serial.println("s");
 }

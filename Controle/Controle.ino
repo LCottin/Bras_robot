@@ -10,7 +10,7 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 #include <RF24Network.h>
-#include <stdlib.h>
+#include <stdlib.h>  
 
 /*
     Step Delay: un délai en millisecondes entre le mouvement de chaque servo. Valeurs autorisées
@@ -125,9 +125,13 @@ unsigned long tempsDebut;
 double duree;
 
 //etat global 
-volatile bool _pauseGlobal;
-volatile bool _stopGlobal;
+bool _pauseGlobal;
+bool _stopGlobal;
 
+//macro pour mettre en pause le bras ou le stopper
+#define ATTENTE PauseStop (); \
+        while(_pauseGlobal){PauseStop();}; \
+        if (_stopGlobal)return; 
 // ---------------------------------------- //
 // -                 SETUP                - //
 // ---------------------------------------- //
@@ -155,8 +159,8 @@ void setup()
     network.begin(108, monNoeud);
 
     //init interruption
-    tone(44, 50); //pin, frequence
-    attachInterrupt(digitalPinToInterrupt(21), PauseStop, FALLING);
+    //tone(44, 50); //pin, frequence
+    //attachInterrupt(digitalPinToInterrupt(21), PauseStop, FALLING);
 }
 
 
@@ -166,111 +170,69 @@ void setup()
 void loop() 
 {
       const byte vitesse  = T_RAPIDE;
-     
-      //action en fonction du récépteur
-      switch (local_data.mode)
-      { 
-        case COLERE : 
-          colere();
-          droit = false;
-          break;
-
-        case JOIE :  
-          joie();
-          droit = false;
-          break;
-
-        case SURPRISE : 
-          surprise();
-          droit = false;
-          break;
-
-        case CONTROLE :
-          local_data._action = PLAY;
-          switch (received_data.id)
-          {
-            case Bracelet1 :
-              local_data.posBase       = received_data.xAxis;
-              local_data.posEpaule     = received_data.yAxis;
-              break;
-    
-            case Bracelet2 :
-              local_data.posCoude      = received_data.xAxis;
-              local_data.posPoignetRot = received_data.yAxis;
-              break;
-              
-            case Bracelet3 :
-              local_data.posPoignetVer = received_data.xAxis;
-              local_data.posPince      = received_data.yAxis;
-              break;
-          }
-          miseEnForme();
-          droit = false;
-          Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-          break;
-
-        case RIEN : 
-        default : 
-          if (droit == false)
-          {
-            Serial.println("Droit");
-            Braccio.positionDroite();
-            droit = true;
-          }
-          break;
-      }
-    
+      _pauseGlobal = false;
+      _stopGlobal = false;
       
-    /*
-    if(Serial.available())
-    {
-        //lecture des données
-        Serial.readBytesUntil('c', (char*)&received_data, sizeof(received_data));
+      network.update();
 
-        //rejets des valeurs abbérantes
-        int somme = 0;
+      while(network.available())
+      {
+          RF24NetworkHeader nHeader;
+          network.read(nHeader, &received_data, sizeof(received_data));
+          
+          //action en fonction du récépteur
+          switch (received_data.mode)
+          { 
+            case COLERE : 
+              colere();
+              droit = false;
+              break;
+    
+            case JOIE :  
+              joie();
+              droit = false;
+              break;
+    
+            case SURPRISE : 
+              surprise();
+              droit = false;
+              break;
+    
+            case CONTROLE :
+              local_data._action = received_data._action;
+              switch (received_data.id)
+              {
+                case Bracelet1 :
+                  local_data.posBase       = received_data.xAxis;
+                  local_data.posEpaule     = received_data.yAxis;
+                  break;
         
-        //posBase
-        somme += abs(received_data.posBase) > vMax.XMAX ? 1 : 0;
-        somme += abs(received_data.posBase) < vMax.XMIN ? 1 : 0;
-        
-        //posEpaule
-        somme += abs(received_data.posEpaule) > vMax.YMAX ? 1 : 0;
-        somme += abs(received_data.posEpaule) < vMax.YMIN ? 1 : 0;
-        
-        //posCoude
-        somme += abs(received_data.posCoude) > vMax.XMAX ? 1 : 0;
-        somme += abs(received_data.posCoude) < vMax.XMIN ? 1 : 0;
-        
-        //pos rot
-        somme += abs(received_data.posPoignetRot) > vMax.YMAX ? 1 : 0;
-        somme += abs(received_data.posPoignetRot) < vMax.YMIN ? 1 : 0;
-        
-        //pos ver
-        somme += abs(received_data.posPoignetVer) > vMax.XMAX ? 1 : 0;
-        somme += abs(received_data.posPoignetVer) < vMax.XMIN ? 1 : 0;
-        
-        //pos ver
-        somme += abs(received_data.posPince) > vMax.YMAX ? 1 : 0;
-        somme += abs(received_data.posPince) < vMax.YMIN ? 1 : 0;
-
-        //si la somme est non nulle, l'une des conditions n'est pas remplie
-        if (somme != 0) return;
-
-        //mouvement
-        miseEnForme();
-        
-        //Serial.print("\t posBase       = "); Serial.println(posBase);
-        //Serial.print("\t posEpaule     = "); Serial.println(posEpaule);
-        //Serial.print("\t posCoude      = "); Serial.println(posCoude);
-        //Serial.print("\t posPoignetRot = "); Serial.println(posPoignetRot);
-        //Serial.print("\t posPoignetVer = "); Serial.println(posPoignetVer);
-        //Serial.print("\t posPince      = "); Serial.println(posPince);
-        //Serial.println();
-        
-        Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
-    }
-    */
+                case Bracelet2 :
+                  local_data.posCoude      = received_data.xAxis;
+                  local_data.posPoignetRot = received_data.yAxis;
+                  break;
+                  
+                case Bracelet3 :
+                  local_data.posPoignetVer = received_data.xAxis;
+                  local_data.posPince      = received_data.yAxis;
+                  break;
+              }
+              miseEnForme();
+              droit = false;
+              Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+              break;
+    
+            case RIEN : 
+            default : 
+              if (droit == false)
+              {
+                Serial.println("Droit");
+                Braccio.positionDroite();
+                droit = true;
+              }
+              break;
+          }
+      }
 }
 
       
@@ -297,40 +259,40 @@ void initBufferEchantillons()
 // ---------------------------------------- //
 void PauseStop()
 {
-    unsigned long debut = micros();
-    //Serial.println("Debut interrupt");
     network.update(); //MAJ du réseau 
 
-    RF24NetworkHeader nHeader;
-    network.read(nHeader, &received_data, sizeof(received_data));
-    
-    if (received_data.id == Telecommande)
+    while(network.available())
     {
-        local_data.mode    = received_data.mode;
-        local_data._action = received_data._action;
-          
-        switch (local_data._action)
-        {
-            case PAUSE :
-              _pauseGlobal = true;
-              _stopGlobal  = false;
-              break;
-
-            case STOP : 
-              _pauseGlobal = false;
-              _stopGlobal  = true;
-              local_data.mode = RIEN;
-              droit = true;
-              break;
-
-            case PLAY : 
-            default:
-              _pauseGlobal = false;
-              _stopGlobal  = false;
-              break;
-        }
-    }  
-    Serial.print("Temps = "); Serial.println((micros() - debut));     
+      RF24NetworkHeader nHeader;
+      network.read(nHeader, &received_data, sizeof(received_data));
+      
+      if (received_data.id == Telecommande)
+      {
+          local_data.mode    = received_data.mode;
+          local_data._action = received_data._action;
+            
+          switch (local_data._action)
+          {
+              case PAUSE :
+                  _pauseGlobal = true;
+                  _stopGlobal  = false;
+                  break;
+  
+              case STOP : 
+                  _pauseGlobal = false;
+                  _stopGlobal  = true;
+                  local_data.mode = RIEN;
+                  droit = true;
+                  break;
+  
+              case PLAY : 
+              default:
+                  _pauseGlobal = false;
+                  _stopGlobal  = false;
+                  break;
+          }
+      }  
+    }
 }
 
 
@@ -427,77 +389,58 @@ void surprise()
     vitesse = RAPIDE;
 
     //return en cas de stop, attend en cas de pause
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
+    
     Serial.println("Debut surprise");
     
     Braccio.positionDroite();
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;   
+    ATTENTE
     Braccio.tournerMain(0, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.tournerMain(180, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
+    ATTENTE
     Braccio.tournerMain(90, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
   
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     
     Braccio.leverMain(20, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.tournerMain(0, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.leverMain(90, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
 
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
   
     Braccio.tournerCoude(20, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.leverMain(180, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.positionDroite();
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.tournerBase(60, vitesse);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
 
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
   
     Braccio.positionDroite();
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.mainOuverte(T_RAPIDE);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     delay(500);
-    while(_pauseGlobal) {};
-    if (_stopGlobal) return;
+    ATTENTE
     Braccio.mainFermee(MOYEN);
     
   

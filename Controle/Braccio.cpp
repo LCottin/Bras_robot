@@ -1,12 +1,19 @@
 #include "Braccio.h"
 
+byte posBase;
+byte posShoulder;
+byte posElbow;
+byte posWristRot;
+byte posWristVer;
+byte posGripper;
+
 _Braccio Braccio;
 
 //Initialize Braccio object
 _Braccio::_Braccio() {}
 
 
-void _Braccio::begin(byte &vBase, byte &vShoulder, byte &vElbow, byte &vWrist_rot, byte &vWrist_ver, byte &vGripper, int soft_start_level) 
+void _Braccio::begin(int soft_start_level) 
 {
     if(soft_start_level != SOFT_START_DISABLED)
     {
@@ -22,6 +29,13 @@ void _Braccio::begin(byte &vBase, byte &vShoulder, byte &vElbow, byte &vWrist_ro
     _Pins[WRIST_VER]  =  5;
     _Pins[GRIPPER]    =  3;
     
+	posBase 	= 90;
+	posShoulder = 95;
+	posElbow 	= 95; 
+	posWristRot = 90;
+	posWristVer = 90;
+	posGripper 	= 90;
+
   	// initialization pin Servo motors
   	base.attach(_Pins[BASE]);
   	shoulder.attach(_Pins[SHOULDER]);
@@ -31,15 +45,7 @@ void _Braccio::begin(byte &vBase, byte &vShoulder, byte &vElbow, byte &vWrist_ro
   	gripper.attach(_Pins[GRIPPER]);
   
   	//inits standing position
-  	resetPos(vBase, vShoulder, vElbow, vWrist_rot, vWrist_ver, vGripper);
-  
-  	//For each step motor this set up the initial degree
-  	base.write(_Positions[BASE]);
-  	shoulder.write(_Positions[SHOULDER]);
-  	elbow.write(_Positions[ELBOW]);
-  	wrist_ver.write(_Positions[WRIST_ROT]);
-  	wrist_rot.write(_Positions[WRIST_VER]);
-  	gripper.write(_Positions[GRIPPER]);
+  	stand();
    
     if(soft_start_level != SOFT_START_DISABLED)
         _softStart(soft_start_level);
@@ -85,111 +91,111 @@ void _Braccio::moveAll(byte vBase, byte vShoulder, byte vElbow, byte vWrist_rot,
 	while (!exit) 
 	{		
 		//turns base	
-		if (vBase != _Positions[BASE]) 
+		if (vBase != posBase) 
 		{			
-			base.write(_Positions[BASE]);
+			base.write(posBase);
 
-			if (vBase > _Positions[BASE]) 
+			if (vBase > posBase) 
 			{
-				_Positions[BASE]++;
+				posBase++;
 			}
 			
-			if (vBase < _Positions[BASE]) 
+			if (vBase < posBase) 
 			{
-				_Positions[BASE]--;
+				posBase--;
 			}
 		}
 
 		//turns shoulder
-		if (vShoulder != _Positions[SHOULDER])  
+		if (vShoulder != posShoulder)  
 		{
-			shoulder.write(_Positions[SHOULDER]);
+			shoulder.write(posShoulder);
 
-			if (vShoulder > _Positions[SHOULDER]) 
+			if (vShoulder > posShoulder) 
 			{
-				_Positions[SHOULDER]++;
+				posShoulder++;
 			}
 			
-			if (vShoulder < _Positions[SHOULDER]) 
+			if (vShoulder < posShoulder) 
 			{	
-				_Positions[SHOULDER]--;
+				posShoulder--;
 			}
 		}
 
 		//turns elbow
-		if (vElbow != _Positions[ELBOW])  
+		if (vElbow != posElbow)  
 		{
-			elbow.write(_Positions[ELBOW]);
+			elbow.write(posElbow);
 
-			if (vElbow > _Positions[ELBOW])
+			if (vElbow > posElbow)
 			{
-				_Positions[ELBOW]++;
+				posElbow++;
 			}
 			
-			if (vElbow < _Positions[ELBOW]) 
+			if (vElbow < posElbow) 
 			{
-				_Positions[ELBOW]--;
+				posElbow--;
 			}
 		}
 
 		//turns wrist rot
-		if (vWrist_rot != _Positions[WRIST_ROT]) 
+		if (vWrist_rot != posWristRot) 
 		{
-			wrist_rot.write(_Positions[WRIST_ROT]);
+			wrist_rot.write(posWristRot);
 
-			if (vWrist_rot > _Positions[WRIST_ROT]) 
+			if (vWrist_rot > posWristRot) 
 			{
-				_Positions[WRIST_ROT]++;				
+				posWristRot++;				
 			}
 			
-			if (vWrist_rot < _Positions[WRIST_ROT]) 
+			if (vWrist_rot < posWristRot) 
 			{
-				_Positions[WRIST_ROT]--;
+				posWristRot--;
 			}
 		}
 
 		//turns wrist ver
-		if (vWrist_ver != _Positions[WRIST_VER])
+		if (vWrist_ver != posWristVer)
 		{
-			wrist_ver.write(_Positions[WRIST_VER]);
+			wrist_ver.write(posWristVer);
 
-			if (vWrist_ver > _Positions[WRIST_VER]) 
+			if (vWrist_ver > posWristVer) 
 			{
-				_Positions[WRIST_VER]++;
+				posWristVer++;
 			}
 
-			if (vWrist_ver < _Positions[WRIST_VER]) 
+			if (vWrist_ver < posWristVer) 
 			{
-				_Positions[WRIST_VER]--;
+				posWristVer--;
 			}
 		}
 
 		//turns gripper
-		if (vGripper != _Positions[GRIPPER])
+		if (vGripper != posGripper)
 		{
-			gripper.write(_Positions[GRIPPER]);
+			gripper.write(posGripper);
 
-			if (vGripper > _Positions[GRIPPER])
-				_Positions[GRIPPER]++;
+			if (vGripper > posGripper)
+				posGripper++;
 			
-			if (vGripper < _Positions[GRIPPER]) 
-				_Positions[GRIPPER]--;
+			if (vGripper < posGripper) 
+				posGripper--;
 		}
 		
 		//delay between each movement
 		delay(speed);
 		
 		//It checks if all the servo motors are in the desired position 
-		if ((vBase == _Positions[BASE]) && (vShoulder == _Positions[SHOULDER])
-			  && (vElbow == _Positions[ELBOW]) && (vWrist_rot == _Positions[WRIST_ROT])
-			    && (vWrist_ver == _Positions[WRIST_VER]) && (vGripper == _Positions[GRIPPER]))
+		if ((vBase == posBase) && (vShoulder == posShoulder)
+			  && (vElbow == posElbow) && (vWrist_rot == posWristRot)
+			    && (vWrist_ver == posWristVer) && (vGripper == posGripper))
 		{
 			exit = true;
 		} 
 	}
 }
 
-void _Braccio::resetPos(byte &posBase, byte &posShoulder, byte &posElbow, byte &posWristRot, byte &posWristVer, byte &posGripper)
+void _Braccio::resetPos()
 {
 	posBase       			= 90;
 	posShoulder     		= 95;
@@ -197,62 +203,57 @@ void _Braccio::resetPos(byte &posBase, byte &posShoulder, byte &posElbow, byte &
 	posWristRot 			= 90;
 	posWristVer 			= 90;
 	posGripper      		= 90;
-	_Positions[BASE] 		= 90;
-  	_Positions[SHOULDER] 	= 95;
-  	_Positions[ELBOW] 		= 95;
-  	_Positions[WRIST_ROT] 	= 90;
-  	_Positions[WRIST_VER] 	= 90;
-  	_Positions[GRIPPER] 	= 90;
 }
 
-void _Braccio::stand(byte &posBase, byte &posShoulder, byte &posElbow, byte &posWristRot, byte &posWristVer, byte &posGripper)
+void _Braccio::stand()
 {
-	resetPos(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
-	moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], RAPIDE);
+	//moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper, RAPIDE);
+  moveAll(90, 95, 95, 90, 90, 90, RAPIDE);
+  //resetPos();
 }
 
-void _Braccio::rangeTest(byte &posBase, byte &posShoulder, byte &posElbow, byte &posWristRot, byte &posWristVer, byte &posGripper)
+void _Braccio::rangeTest()
 {
 	//turns base
-	stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+	stand();
 	for (byte i = 0; i < 180; i++)
 	{
-		moveAll(i, _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], RAPIDE);
+		moveAll(i, posShoulder, posElbow, posWristRot, posWristVer, posGripper, RAPIDE);
 	}
 
 	//turns shoulder
-	stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+	stand();
 	for (byte i = 20; i < 160; i++)
 	{
-		moveAll(_Positions[BASE], i, _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], RAPIDE);
+		moveAll(posBase, i, posElbow, posWristRot, posWristVer, posGripper, RAPIDE);
 	}
 
 	//turns elbow
-	stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+	stand();
 	for (byte i = 0; i < 180; i++)
 	{
-		moveAll(_Positions[BASE], _Positions[SHOULDER], i, _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], RAPIDE);
+		moveAll(posBase, posShoulder, i, posWristRot, posWristVer, posGripper, RAPIDE);
 	}
 
 	//turns wrist rot
-	stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+	stand();
 	for (byte i = 0; i < 180; i++)
 	{
-		moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], i, _Positions[WRIST_VER], _Positions[GRIPPER], RAPIDE);
+		moveAll(posBase, posShoulder, posElbow, i, posWristVer, posGripper, RAPIDE);
 	}
 
 	//turns wrist ver
-	stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+	stand();
 	for (byte i = 0; i < 180; i++)
 	{
-		moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], i, _Positions[GRIPPER], RAPIDE);
+		moveAll(posBase, posShoulder, posElbow, posWristRot, i, posGripper, RAPIDE);
 	}
 
 	//turns gripper
-	stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+	stand();
 	for (byte i = 25; i < 90; i++)
 	{
-		moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], i, RAPIDE);
+		moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, i, RAPIDE);
 	} 
 }
 
@@ -272,7 +273,7 @@ void _Braccio::moveMotor(const NAME name, byte position, const SPEED speed)
 	{
 		case BASE:
 		{
-			moveAll(position, _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], speed);
+			moveAll(position, posShoulder, posElbow, posWristRot, posWristVer, posGripper, speed);
 			break;
 		}
 
@@ -280,25 +281,25 @@ void _Braccio::moveMotor(const NAME name, byte position, const SPEED speed)
 		{
 			position = (position > 160) ? 160 : position;
 			position = (position < 20) ? 20 : position;
-			moveAll(_Positions[BASE], position, _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], speed);
+			moveAll(posBase, position, posElbow, posWristRot, posWristVer, posGripper, speed);
 			break;
 		}
 
 		case ELBOW:
 		{
-			moveAll(_Positions[BASE], _Positions[SHOULDER], position, _Positions[WRIST_ROT], _Positions[WRIST_VER], _Positions[GRIPPER], speed);
+			moveAll(posBase, posShoulder, position, posWristRot, posWristVer, posGripper, speed);
 			break;
 		}
 
 		case WRIST_ROT:
 		{
-			moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], position, _Positions[WRIST_VER], _Positions[GRIPPER], speed);
+			moveAll(posBase, posShoulder, posElbow, position, posWristVer, posGripper, speed);
 			break;
 		}
 
 		case WRIST_VER:
 		{
-			moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], position, _Positions[GRIPPER], speed);
+			moveAll(posBase, posShoulder, posElbow, posWristRot, position, posGripper, speed);
 			break;
 		}
 
@@ -306,22 +307,20 @@ void _Braccio::moveMotor(const NAME name, byte position, const SPEED speed)
 		{
 			position = (position > 90) ? 90 : position;
 			position = (position < 25) ? 25 : position;
-			moveAll(_Positions[BASE], _Positions[SHOULDER], _Positions[ELBOW], _Positions[WRIST_ROT], _Positions[WRIST_VER], position, speed);
+			moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, position, speed);
 			break;
 		}
 	}
 }
 
-void _Braccio::openGripper(byte &posGripper, const SPEED speed)
+void _Braccio::openGripper(const SPEED speed)
 {
-  	_Positions[GRIPPER] = 90;
     posGripper			= 90;
-  	moveMotor(GRIPPER, _Positions[GRIPPER], speed);
+  	moveMotor(GRIPPER, posGripper, speed);
 }
 
-void _Braccio::closeGripper(byte &posGripper, const SPEED speed)
+void _Braccio::closeGripper(const SPEED speed)
 {
-  	_Positions[GRIPPER] = 25;
 	posGripper	 		= 25;
-  	moveMotor(GRIPPER, _Positions[GRIPPER], speed);
+  	moveMotor(GRIPPER, posGripper, speed);
 }

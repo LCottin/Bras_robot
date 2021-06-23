@@ -13,6 +13,13 @@
 enum SPEED {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10, NONE = 0};
 enum NAME  {BASE, SHOULDER, ELBOW, WRIST_ROT, WRIST_VER, GRIPPER};
     
+extern byte posBase;
+extern byte posShoulder;
+extern byte posElbow;
+extern byte posWristRot;
+extern byte posWristVer;
+extern byte posGripper;
+
 class _Braccio 
 {
     private:
@@ -22,9 +29,6 @@ class _Braccio
         Servo wrist_rot;
         Servo wrist_ver;
         Servo gripper;
-
-        //stores current positions of each motor
-        byte _Positions[6];
 
         //stores pins to attach servos
         byte _Pins[6];
@@ -51,7 +55,7 @@ class _Braccio
         /**
          * Initialises the braccio and makes him stands
          */
-        void begin(byte &vBase, byte &vShoulder, byte &vElbow, byte &vWrist_rot, byte &vWrist_ver, byte &vGripper, int soft_start_level = SOFT_START_DEFAULT); 
+        void begin(int soft_start_level = SOFT_START_DEFAULT); 
 
         /**
          * This function allow the user to control all the servo motors in the Braccio
@@ -66,13 +70,13 @@ class _Braccio
         void moveAll(byte vBase, byte vShoulder, byte vElbow, byte vWrist_rot, byte vWrist_ver, byte vGripper, const SPEED speed);
 
         /* Tests the arm around all directions */
-        void rangeTest(byte &posBase, byte &posShoulder, byte &posElbow, byte &posWristRot, byte &posWristVer, byte &posGripper);
+        void rangeTest();
 
         /* This function makes the arm stand */
-        void stand(byte &posBase, byte &posShoulder, byte &posElbow, byte &posWristRot, byte &posWristVer, byte &posGripper);
+        void stand();
 
         /* Resets positions of every motors */
-        void resetPos(byte &posBase, byte &posShoulder, byte &posElbow, byte &posWristRot, byte &posWristVer, byte &posGripper);
+        void resetPos();
 
         /**
          * Turns the motor specified
@@ -86,13 +90,13 @@ class _Braccio
          * Fully opens gripper
          * @param speed Speed of the movement
          */
-        void openGripper(byte &posGripper, const SPEED speed);
+        void openGripper(const SPEED speed);
 
         /**
          * Fully closes gripper
          * @param speed Speed of the movement
          */
-        void closeGripper(byte &posGripper, const SPEED speed);
+        void closeGripper(const SPEED speed);
 };
 
 extern _Braccio Braccio;

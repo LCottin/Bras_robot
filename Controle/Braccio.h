@@ -1,140 +1,104 @@
-/*
-  Braccio.h - board library Version 2.0
-  Written by Andrea Martino and Angelo Ferrante
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2.1 of the License, or (at your option) any later version.
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
-#ifndef BRACCIO_H_
-#define BRACCIO_H_
+#ifndef __BRACCIO__
+#define __BRACCIO__
 
 #include <Arduino.h>
 #include <Servo.h>
 
-// You should set begin(SOFT_START_DISABLED) if you are using the Arm Robot shield V1.6
-#define SOFT_START_DISABLED		-999
+#define LOW_LIMIT_TIMEOUT       2000
+#define HIGH_LIMIT_TIMEOUT      6000
+#define SOFT_START_CONTROL_PIN  12
+#define SOFT_START_DISABLED     -999
+#define SOFT_START_DEFAULT      0
 
-//The default value for the soft start
-#define SOFT_START_DEFAULT		0
+enum SPEED {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10, NONE = 0};
+enum NAME  {BASE, SHOULDER, ELBOW, WRIST_ROT, WRIST_VER, GRIPPER};
+    
+extern byte posBase;
+extern byte posShoulder;
+extern byte posElbow;
+extern byte posWristRot;
+extern byte posWristVer;
+extern byte posGripper;
 
-//The software PWM is connected to PIN 12. You cannot use the pin 12 if you are using
-//a Braccio shield V4 or newer
-#define SOFT_START_CONTROL_PIN	12
+class _Braccio 
+{
+    private:
+        Servo base;
+        Servo shoulder;
+        Servo elbow;
+        Servo wrist_rot;
+        Servo wrist_ver;
+        Servo gripper;
 
-//Low and High Limit Timeout for the Software PWM
-#define LOW_LIMIT_TIMEOUT 2000
-#define HIGH_LIMIT_TIMEOUT 6000
+        //stores pins to attach servos
+        byte _Pins[6];
+        
+        /*
+        * This function, used only with the Braccio Shield V4 and greater,
+        * turn ON the Braccio softly and save Braccio from brokes.
+        * The SOFT_START_CONTROL_PIN is used as a software PWM
+        * @param soft_start_level: the minimum value is -70, , default value is 0 (SOFT_START_DEFAULT)
+        */
+        void _softStart(int soft_start_level);
+        
+        /*
+        * Software implementation of the PWM for the SOFT_START_CONTROL_PIN,HIGH
+        * @param high_time: the time in the logic level high
+        * @param low_time: the time in the logic level low
+        */
+        void _softwarePWM(int high_time, int low_time);
 
-enum VITESSE {T_LENT = 30, LENT = 25, MOYEN = 20, RAPIDE = 15, T_RAPIDE = 10};
+    
+  	public:
+        _Braccio();
+    		
+        /**
+         * Initialises the braccio and makes him stands
+         */
+        void begin(int soft_start_level = SOFT_START_DEFAULT); 
 
-class _Braccio {
+        /**
+         * This function allow the user to control all the servo motors in the Braccio
+         * @param Vbase New position of the base
+         * @param Vshoulder New position of the shoulder
+         * @param Velbow New position of the elbow
+         * @param Vwrist_rot New position of the wrist_rot
+         * @param Vwrist_ver New position of the wrist_ver
+         * @param Vgripper New position of the gripper
+         * @param speed Speed of the movement
+         */
+        void moveAll(byte vBase, byte vShoulder, byte vElbow, byte vWrist_rot, byte vWrist_ver, byte vGripper, const SPEED speed);
 
-public:
-  _Braccio();
-  	
-  /**
-  * Braccio initializations and set intial position
-  * Modifing this function you can set up the initial position of all the
-  * servo motors of Braccio 
-  *@param soft_start_level: the minimum value is -70, default value is 0 (SOFT_START_DEFAULT)
-  * You should set begin(SOFT_START_DISABLED) if you are using the Arm Robot shield V1.6
-  */
-  unsigned int begin(int soft_start_level=SOFT_START_DEFAULT); 
+        /* Tests the arm around all directions */
+        void rangeTest();
 
-  /**
-   * This function allow the user to control all the servo motors in the Braccio
-   */
-  void ServoMovement(int delay, int Vbase,int Vshoulder, int Velbow, int Vwrist_ver, int Vwrist_rot, int Vgripper); 
-	
-  /* Tests the arm around all directions */
-  void testAmplitude();
+        /* This function makes the arm stand */
+        void stand();
 
-  /* This function makes the arm stand */
-  void positionDroite();
+        /* Resets positions of every motors */
+        void resetPos();
 
-  /**
-   * Makes the basement turn 
-   * @param valeurAngle New angle of the basement
-   * @param vitesse Speed of the movement
-   */
-  void tournerBase(short valeurAngle, byte vitesse);
-  
-  /**
-   * Makes the shoulder turn 
-   * @param valeurAngle New angle of the shoulder
-   * @param vitesse Speed of the movement
-   */
-  void tournerEpaule(short valeurAngle, byte vitesse);
+        /**
+         * Turns the motor specified
+         * @param motor Name of the motor
+         * @param position New position of this motor
+         * @param speed Speed of the movement
+         */
+        void moveMotor(const NAME name, byte position, const SPEED speed);
 
-  /**
-   * Makes the elbow turn 
-   * @param valeurAngle New angle of the elbow
-   * @param vitesse Speed of the movement
-   */
-  void tournerCoude(short valeurAngle, byte vitesse);
+        /**
+         * Fully opens gripper
+         * @param speed Speed of the movement
+         */
+        void openGripper(const SPEED speed);
 
-  /**
-   * Makes the hand rise 
-   * @param valeurAngle New angle of the hand
-   * @param vitesse Speed of the movement
-   */
-  void leverMain(short valeurAngle, byte vitesse);
-
-  /**
-   * Makes the hand turn 
-   * @param valeurAngle New angle of the hand
-   * @param vitesse Speed of the movement
-   */
-  void tournerMain(short valeurAngle, byte vitesse);
-
-  /**
-   * Makes the hand open
-   * @param valeurAngle New angle of the hand
-   * @param vitesse Speed of the movement
-   */
-  void ouvrirPince(short valeurAngle, byte vitesse);
-
-  /**
-   * Makes the hand fully opened
-   * @param vitesse Speed of the movement
-   */
-  void mainOuverte(byte vitesse);
-
-  /**
-   * Makes the hand fully closed
-   * @param vitesse Speed of the movement
-   */
-  void mainFermee(byte vitesse);
-
-
-private:
-  /*
-  * This function, used only with the Braccio Shield V4 and greater,
-  * turn ON the Braccio softly and save Braccio from brokes.
-  * The SOFT_START_CONTROL_PIN is used as a software PWM
-  * @param soft_start_level: the minimum value is -70, , default value is 0 (SOFT_START_DEFAULT)
-  */
-  void _softStart(int soft_start_level);
-	
-  /*
-  * Software implementation of the PWM for the SOFT_START_CONTROL_PIN,HIGH
-  * @param high_time: the time in the logic level high
-  * @param low_time: the time in the logic level low
-  */
-  void _softwarePWM(int high_time, int low_time);
-
-
+        /**
+         * Fully closes gripper
+         * @param speed Speed of the movement
+         */
+        void closeGripper(const SPEED speed);
 };
 
 extern _Braccio Braccio;
 
-#endif // BRACCIO_H_
+#endif

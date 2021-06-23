@@ -28,18 +28,20 @@ enum BOUTON {PIN_HAUT = 2, PIN_BAS = 3, PIN_PLAY = 4, PIN_PAUSE = 5, PIN_STOP = 
 const byte NOMBRE_ORDRES = 4;
 short numOrdre = 3; 
 
-enum ACTION {RIEN = 10, PLAY = 11, PAUSE = 12, STOP = 13};
+enum ACTIONS {PLAY = 11, PAUSE = 12, STOP = 13};
+enum MODES {COLERE = 20, JOIE = 21, SURPRISE = 22, CONTROLE = 23, RIEN = 24};
 
 const char ordreTexte[NOMBRE_ORDRES][10] = {"Colere", "Joie", "Surprise", "Controle"};
-const byte ordre[NOMBRE_ORDRES]          = {0, 1, 2, 3};
+const byte ordre[NOMBRE_ORDRES]          = {COLERE, JOIE, SURPRISE, CONTROLE};
 
 //structure de données pour l'envoie des ordres
 struct dataToSend
 {
-    short id = TELECOMMANDE - 1;
-    short xAxis = 0; //inutile pour la telecommande
-    short yAxis = 0; //inutile pour la telecommande
-    char mode;
+    short id      = TELECOMMANDE - 1;
+    short xAxis   = 0; //inutile pour la telecommande
+    short yAxis   = 0; //inutile pour la telecommande
+    char mode     = RIEN;
+    char _action  = PLAY;
 } send_data;
 
 
@@ -71,7 +73,7 @@ void setup()
     u8g2.firstPage();
     do {
       u8g2.setFont(u8g2_font_ncenB14_tr);
-      u8g2.drawStr(10, 20, "Init ...");
+      u8g2.drawStr(20, 40, "Init ...");
       delay(500);
     } while (u8g2.nextPage());
     
@@ -83,6 +85,7 @@ void loop()
     //vide le buffer
     network.update();
   
+    //action en fonction du bouton actif
     if (digitalRead(PIN_HAUT) == HIGH)
     {
         u8g2.clear();
@@ -129,60 +132,80 @@ void loop()
           do 
           {
             u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(10, 20, "En cours : ");
+            u8g2.drawStr(10, 20, "Play : ");
             u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
           } while (u8g2.nextPage());
         }
         send_data.mode = ordre[numOrdre];
+        send_data._action = PLAY;
         u8g2.clear();
     }
     
     else if (digitalRead(PIN_PAUSE) == HIGH)
     {
         u8g2.clear();
-        while (digitalRead(PIN_PAUSE) == HIGH)
-        {
+        
           u8g2.firstPage();
           do 
           {
             u8g2.setFont(u8g2_font_ncenB14_tr);
             u8g2.drawStr(10, 50, "Pause");
           } while (u8g2.nextPage());
-          send_data.mode = PAUSE;
-        }
-        u8g2.clear();
+          send_data._action = PAUSE;
     }
     
     else if (digitalRead(PIN_STOP) == HIGH)
     {
         u8g2.clear();
-        while (digitalRead(PIN_STOP) == HIGH)
-        {
+        
           u8g2.firstPage();
           do 
           {
             u8g2.setFont(u8g2_font_ncenB14_tr);
             u8g2.drawStr(10, 50, "STOP");
           } while (u8g2.nextPage());
-          send_data.mode = STOP;
-        }
+          send_data.mode = RIEN;
+          send_data._action = STOP;
+        
         u8g2.clear();
     }
     
     else
     {
-        u8g2.firstPage();
-        do 
+        switch (send_data._action)
         {
-          u8g2.setFont(u8g2_font_ncenB14_tr);
-          u8g2.drawStr(10, 50, "En attente");
-        } while (u8g2.nextPage());
-        send_data.mode = RIEN;
-        //u8g2.clear();
+          case PLAY :
+            u8g2.firstPage();
+            do 
+            {
+              u8g2.setFont(u8g2_font_ncenB14_tr);
+              u8g2.drawStr(10, 20, "En cours : ");
+              u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+            } while (u8g2.nextPage());
+            break;
+
+            case STOP :
+              u8g2.firstPage();
+              do 
+              {
+                u8g2.setFont(u8g2_font_ncenB14_tr);
+                u8g2.drawStr(10, 50, "STOP !");
+              } while (u8g2.nextPage());
+              break;
+
+            case PAUSE :
+              u8g2.firstPage();
+              do 
+              {
+                u8g2.setFont(u8g2_font_ncenB14_tr);
+                u8g2.drawStr(10, 50, "PAUSE !");
+              } while (u8g2.nextPage());
+              break;
+        }
     }
 
     //envoie sur le réseau
     RF24NetworkHeader nHeader(noeudMere);
     network.write(nHeader, &send_data, sizeof(send_data));
-    //delay(100);
+    delay(100);
 }

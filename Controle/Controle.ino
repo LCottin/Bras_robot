@@ -64,30 +64,22 @@ struct data
 // valeurs à envoyer à la Uno-Braccio
 struct dataToSend
 {
-  short posBase       = vMax.XMOY;
-  short posEpaule     = vMax.YMOY;
-  short posCoude      = vMax.XMOY; 
-  short posPoignetRot = vMax.YMOY;
-  short posPoignetVer = vMax.XMOY;
-  short posPince      = vMax.YMOY;
+  short posBase     = vMax.XMOY;
+  short posShoulder = vMax.YMOY;
+  short posElbow    = vMax.XMOY; 
+  short posWristRot = vMax.YMOY;
+  short posWristVer = vMax.XMOY;
+  short posGripper  = vMax.YMOY;
   char mode;
   char _action;
 } local_data;
 
-Servo base;      //pour tourner sur la base
-Servo shoulder;  //servo 2, en bas
-Servo elbow;     //servo 3, central
-Servo wrist_rot; //servo 4, baisse/monte la pince
-Servo wrist_ver; //servo 5, tourne la pince
-Servo gripper;   //servo 6, ouvre/ferme pince
-
-//pour memoriser la positoin de chaque servo
-short posBase       = 90;
-short posEpaule     = 95;
-short posCoude      = 95; 
-short posPoignetRot = 90;
-short posPoignetVer = 90;
-short posPince      = 90;
+byte posBase;
+byte posShoulder;
+byte posElbow; 
+byte posWristRot;
+byte posWristVer;
+byte posGripper;
 
 enum BRACELETS {Bracelet1, Bracelet2, Bracelet3, Telecommande};
 enum ACTIONS {PLAY = 11, PAUSE = 12, STOP = 13};
@@ -118,7 +110,7 @@ short i;
 bool droit = true;
 
 //definition de la vitesse des moteurs
-byte vitesse;
+SPEED speed;
 
 //Pour mesurer le temps d'execution d'un programme
 unsigned long tempsDebut;
@@ -140,9 +132,9 @@ void setup()
     Serial.begin(57600);
     
     /* ROUTINE D'INITIALISATION DU BRAS*/ 
-    Braccio.begin();  
+    Braccio.begin(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);  
     delay(100);
-    Braccio.positionDroite();   
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);   
 
     initBufferEchantillons();
 
@@ -165,7 +157,7 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-      const byte vitesse  = T_RAPIDE;
+      speed  = T_RAPIDE;
       _pauseGlobal = false;
       _stopGlobal = false;
       
@@ -200,32 +192,32 @@ void loop()
               {
                 case Bracelet1 :
                   local_data.posBase       = received_data.xAxis;
-                  local_data.posEpaule     = received_data.yAxis;
+                  local_data.posShoulder     = received_data.yAxis;
                   break;
         
                 case Bracelet2 :
-                  local_data.posCoude      = received_data.xAxis;
-                  local_data.posPoignetRot = received_data.yAxis;
+                  local_data.posElbow      = received_data.xAxis;
+                  local_data.posWristRot = received_data.yAxis;
                   break;
                   
                 case Bracelet3 :
-                  local_data.posPoignetVer = received_data.xAxis;
-                  local_data.posPince      = received_data.yAxis;
+                  local_data.posWristVer = received_data.xAxis;
+                  local_data.posGripper      = received_data.yAxis;
                   break;
               }
               miseEnForme();
               droit = false;
-              Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+              Braccio.moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper, speed);
               break;
     
             case RIEN : 
             default : 
-              if (droit == false)
-              {
-                Serial.println("Droit");
-                Braccio.positionDroite();
-                droit = true;
-              }
+                if (droit == false)
+                {
+                    Serial.println("Droit");
+                    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+                    droit = true;
+            }
               break;
           }
       }
@@ -237,16 +229,16 @@ void loop()
 // ---------------------------------------- //
 void initBufferEchantillons()
 {
-  for(i = 0; i < NB_MOYENNAGE; i++)
+    for(i = 0; i < NB_MOYENNAGE; i++)
     {
-      x1[i] = vMax.XMOY;
-      y1[i] = vMax.YMOY;
-      
-      x2[i] = vMax.XMOY;
-      y2[i] = vMax.YMOY;
+        x1[i] = vMax.XMOY;
+        y1[i] = vMax.YMOY;
+        
+        x2[i] = vMax.XMOY;
+        y2[i] = vMax.YMOY;
 
-      x3[i] = vMax.XMOY;
-      y3[i] = vMax.YMOY;
+        x3[i] = vMax.XMOY;
+        y3[i] = vMax.YMOY;
     }
 }
 
@@ -259,34 +251,34 @@ void PauseStop()
 
     while(network.available())
     {
-      RF24NetworkHeader nHeader;
-      network.read(nHeader, &received_data, sizeof(received_data));
-      
-      if (received_data.id == Telecommande)
-      {
-          local_data.mode    = received_data.mode;
-          local_data._action = received_data._action;
-            
-          switch (local_data._action)
-          {
-              case PAUSE :
-                  _pauseGlobal = true;
-                  _stopGlobal  = false;
-                  break;
-  
-              case STOP : 
-                  _pauseGlobal = false;
-                  _stopGlobal  = true;
-                  local_data.mode = RIEN;
-                  droit = true;
-                  break;
-  
-              case PLAY : 
-              default:
-                  _pauseGlobal = false;
-                  _stopGlobal  = false;
-                  break;
-          }
+        RF24NetworkHeader nHeader;
+        network.read(nHeader, &received_data, sizeof(received_data));
+        
+        if (received_data.id == Telecommande)
+        {
+            local_data.mode    = received_data.mode;
+            local_data._action = received_data._action;
+                
+            switch (local_data._action)
+            {
+                case PAUSE :
+                    _pauseGlobal = true;
+                    _stopGlobal  = false;
+                    break;
+    
+                case STOP : 
+                    _pauseGlobal = false;
+                    _stopGlobal  = true;
+                    local_data.mode = RIEN;
+                    droit = true;
+                    break;
+    
+                case PLAY : 
+                default:
+                    _pauseGlobal = false;
+                    _stopGlobal  = false;
+                    break;
+            }
       }  
     }
 }
@@ -302,11 +294,11 @@ void miseEnForme()
 
     //lecture des donnees
     x1[cmp] = local_data.posBase;
-    y1[cmp] = local_data.posEpaule;
-    x2[cmp] = local_data.posCoude;
-    y2[cmp] = local_data.posPoignetRot;
-    x3[cmp] = local_data.posPoignetVer;
-    y3[cmp] = local_data.posPince;
+    y1[cmp] = local_data.posShoulder;
+    x2[cmp] = local_data.posElbow;
+    y2[cmp] = local_data.posWristRot;
+    x3[cmp] = local_data.posWristVer;
+    y3[cmp] = local_data.posGripper;
 
     //tri des tableaux
     qsort(x1, NB_MOYENNAGE, sizeof(short), compare);
@@ -326,30 +318,26 @@ void miseEnForme()
     
     //affecte les positions des moteurs avec un mapping
     posBase       = map(moyenneX1, vMax.XMIN, vMax.XMAX, 0, 180);
-    posEpaule     = map(moyenneY1, vMax.YMIN, vMax.YMAX, 15, 165);
-    posCoude      = map(moyenneX2, vMax.XMIN, vMax.XMAX, 0, 180);
-    posPoignetRot = map(moyenneY2, vMax.YMIN, vMax.YMAX, 0, 180);
-    posPoignetVer = map(moyenneX3, vMax.XMIN, vMax.XMAX, 0, 180);
-    posPince      = map(moyenneY3, vMax.YMIN, vMax.YMAX, 25, 90);
+    posShoulder   = map(moyenneY1, vMax.YMIN, vMax.YMAX, 15, 165);
+    posElbow      = map(moyenneX2, vMax.XMIN, vMax.XMAX, 0, 180);
+    posWristRot   = map(moyenneY2, vMax.YMIN, vMax.YMAX, 0, 180);
+    posWristVer   = map(moyenneX3, vMax.XMIN, vMax.XMAX, 0, 180);
+    posGripper    = map(moyenneY3, vMax.YMIN, vMax.YMAX, 25, 90);
     
     //sature en cas de valeurs trop importantes pour proteger les moteurs
     if (posBase > 180) posBase = 180;
-    if (posBase < 0)   posBase = 0;
     
-    if (posEpaule > 165) posEpaule = 165;
-    if (posEpaule < 15)  posEpaule = 15;
+    if (posShoulder > 165) posShoulder = 165;
+    if (posShoulder < 15)  posShoulder = 15;
     
-    if (posCoude > 180) posCoude = 180;
-    if (posCoude < 0)   posCoude = 0;
+    if (posElbow > 180) posElbow = 180;
     
-    if (posPoignetRot > 180) posPoignetRot = 180;
-    if (posPoignetRot < 0)   posPoignetRot = 0;
+    if (posWristRot > 180) posWristRot = 180;
     
-    if (posPoignetVer > 180) posPoignetVer = 180;
-    if (posPoignetVer < 0)   posPoignetVer = 0;
+    if (posWristVer > 180) posWristVer = 180;
     
-    if (posPince > 90) posPince = 90;
-    if (posPince < 25) posPince = 25;
+    if (posGripper > 90) posGripper = 90;
+    if (posGripper < 25) posGripper = 25;
 }
 
 
@@ -369,66 +357,66 @@ int compare (const void * a, const void * b)
 void surprise()
 {
     tempsDebut = millis();
-    vitesse = RAPIDE;
+    speed = RAPIDE;
 
     //return en cas de stop, attend en cas de pause
     ATTENTE
     
     Serial.println("Debut surprise");
     
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
-    Braccio.tournerMain(0, vitesse);
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
-    Braccio.tournerMain(180, vitesse);
+    Braccio.moveMotor(WRIST_VER, 180, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 90, speed);
     ATTENTE
     delay(500);
   
     ATTENTE
     
-    Braccio.leverMain(20, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 20, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(0, vitesse);
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.leverMain(90, vitesse);
-    ATTENTE
-    delay(500);
-
-    ATTENTE
-  
-    Braccio.tournerCoude(20, vitesse);
-    ATTENTE
-    Braccio.leverMain(180, vitesse);
-    ATTENTE
-    Braccio.positionDroite();
-    ATTENTE
-    Braccio.tournerBase(60, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 90, speed);
     ATTENTE
     delay(500);
 
     ATTENTE
   
-    Braccio.positionDroite();
+    Braccio.moveMotor(ELBOW, 20, speed);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    ATTENTE
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(BASE, 60, speed);
+    ATTENTE
+    delay(500);
+
+    ATTENTE
+  
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.mainOuverte(T_RAPIDE);
+    Braccio.openGripper(posGripper,T_RAPIDE);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.mainFermee(MOYEN);
+    Braccio.closeGripper(posGripper, MOYEN);
     
   
     delay(1000);
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
   
     duree = millis() - tempsDebut;
     Serial.print("Temps d'execution de surprise = ");
@@ -442,172 +430,172 @@ void surprise()
 // ---------------------------------------- //
 void test1()
 {
-    vitesse = T_LENT;
+    speed = T_LENT;
     Serial.println("Changement");
-    Braccio.resetPos();
+    Braccio.resetPos(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
-    Braccio.mainOuverte(vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.mainFermee(vitesse);
+    Braccio.openGripper(posGripper,speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.positionDroite();
-    ATTENTE
-    Braccio.tournerMain(0, vitesse);
+    Braccio.closeGripper(posGripper, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(180, vitesse);
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 180, speed);
     ATTENTE
     delay(500);
     ATTENTE
-  
-    Braccio.leverMain(20, vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.tournerMain(0, vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.leverMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 90, speed);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.tournerCoude(20, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 20, speed);
     ATTENTE
-    Braccio.leverMain(180, vitesse);
+    delay(500);
     ATTENTE
-    Braccio.positionDroite();
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
-    Braccio.tournerBase(60, vitesse);
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    ATTENTE
+    delay(500);
+    ATTENTE
+  
+    Braccio.moveMotor(ELBOW, 20, speed);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    ATTENTE
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(BASE, 60, speed);
     ATTENTE
     delay(500);
     ATTENTE
   
     delay(1000);
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
 
     delay(1000);
-    vitesse = MOYEN;
+    speed = MOYEN;
     ATTENTE
-    Braccio.resetPos();
+    Braccio.resetPos(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
-    Braccio.mainOuverte(vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.mainFermee(vitesse);
-    ATTENTE
-    Braccio.positionDroite();
-    ATTENTE
-    Braccio.tournerMain(0, vitesse);
+    Braccio.openGripper(posGripper,speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(180, vitesse);
+    Braccio.closeGripper(posGripper, speed);
+    ATTENTE
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 180, speed);
     ATTENTE
     delay(500);
     ATTENTE
-  
-    Braccio.leverMain(20, vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.tournerMain(0, vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.leverMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 90, speed);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.tournerCoude(20, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 20, speed);
     ATTENTE
-    Braccio.leverMain(180, vitesse);
+    delay(500);
     ATTENTE
-    Braccio.positionDroite();
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
-    Braccio.tournerBase(60, vitesse);
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    ATTENTE
+    delay(500);
+    ATTENTE
+  
+    Braccio.moveMotor(ELBOW, 20, speed);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    ATTENTE
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(BASE, 60, speed);
     ATTENTE
     delay(500);
     ATTENTE
   
     delay(2000);
     ATTENTE
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
     delay(2000);
     ATTENTE
   
-    vitesse = T_RAPIDE;
+    speed = T_RAPIDE;
     ATTENTE
     Serial.println("Changement");
     ATTENTE
-    Braccio.resetPos();
+    Braccio.resetPos(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
-    Braccio.mainOuverte(vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.mainFermee(vitesse);
+    Braccio.openGripper(posGripper,speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.positionDroite();
-    ATTENTE
-    Braccio.tournerMain(0, vitesse);
+    Braccio.closeGripper(posGripper, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(180, vitesse);
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.tournerMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 180, speed);
     ATTENTE
     delay(500);
     ATTENTE
-  
-    Braccio.leverMain(20, vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.tournerMain(0, vitesse);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.leverMain(90, vitesse);
+    Braccio.moveMotor(WRIST_VER, 90, speed);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.tournerCoude(20, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 20, speed);
     ATTENTE
-    Braccio.leverMain(180, vitesse);
+    delay(500);
     ATTENTE
-    Braccio.positionDroite();
+    Braccio.moveMotor(WRIST_VER, 0, speed);
     ATTENTE
-    Braccio.tournerBase(60, vitesse);
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    ATTENTE
+    delay(500);
+    ATTENTE
+  
+    Braccio.moveMotor(ELBOW, 20, speed);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    ATTENTE
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
+    ATTENTE
+    Braccio.moveMotor(BASE, 60, speed);
     ATTENTE
     delay(500);
     ATTENTE
   
     delay(3000);
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
 }
 
 
@@ -617,69 +605,69 @@ void test1()
 void colere()
 {
     tempsDebut = millis();
-    vitesse = MOYEN;
+    speed = MOYEN;
   
-    Braccio.tournerEpaule(150, MOYEN);
+    Braccio.moveMotor(SHOULDER, 150, MOYEN);
     ATTENTE
     delay(10);
     ATTENTE
-    Braccio.ServoMovement(vitesse, posBase, 90, 20, 180, posPoignetVer, posPince);
+    Braccio.moveAll(posBase, 90, 20, 180, posWristVer, posGripper, speed);
     ATTENTE
     delay(20);
     ATTENTE
-    Braccio.leverMain(115, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 115, speed);
     ATTENTE
     delay(10);
     ATTENTE
   
     for (i = 0; i < 3; i++)
     {
-        Braccio.mainOuverte(vitesse);
+        Braccio.openGripper(posGripper,speed);
         ATTENTE
         delay(10);
         ATTENTE
-        Braccio.mainFermee(vitesse);
+        Braccio.closeGripper(posGripper, speed);
         ATTENTE
         delay(10);
         ATTENTE
     }
-    Braccio.ouvrirPince(90, vitesse);
+    Braccio.moveMotor(GRIPPER, 90, speed);
     ATTENTE
     
-    Braccio.tournerEpaule(30, vitesse);
+    Braccio.moveMotor(SHOULDER, 30, speed);
     ATTENTE
     delay(10);
-    Braccio.ServoMovement(vitesse, posBase, 140, 95, 95, 90, 90);
+    Braccio.moveAll(posBase, 140, 95, 95, 90, 90, speed);
     ATTENTE
     delay(30);
-    Braccio.ServoMovement(vitesse, 30, 110, 80, 150, 90, 90);
+    Braccio.moveAll(30, 110, 80, 150, 90, 90, speed);
     ATTENTE
     delay(30);
-    Braccio.ServoMovement(vitesse, 90, 70, 60, 90, 90, 90);
+    Braccio.moveAll(90, 70, 60, 90, 90, 90, speed);
     ATTENTE
     delay(30);
-    Braccio.ServoMovement(vitesse, 120, 30, 90, 90, 90, 90);
+    Braccio.moveAll(120, 30, 90, 90, 90, 90, speed);
     ATTENTE
     delay(100);
   
-    Braccio.tournerEpaule(160, vitesse);
+    Braccio.moveMotor(SHOULDER, 160, speed);
     ATTENTE
     delay(10);
-    Braccio.leverMain(150, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 150, speed);
     ATTENTE
     delay(50);
-    Braccio.ServoMovement(vitesse, posBase, 140, 95, 95, 90, 90);
+    Braccio.moveAll(posBase, 140, 95, 95, 90, 90, speed);
     ATTENTE
   
-    Braccio.tournerEpaule(95, vitesse);
+    Braccio.moveMotor(SHOULDER, 95, speed);
     ATTENTE
     delay(10);
     ATTENTE
-    Braccio.tournerCoude(95, vitesse);
+    Braccio.moveMotor(ELBOW, 95, speed);
     ATTENTE
     delay(10);
     ATTENTE
-    Braccio.leverMain(10, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 10, speed);
     ATTENTE
     delay(10);
   
@@ -687,15 +675,15 @@ void colere()
     {
         if (i%2)
         {
-            Braccio.tournerBase(10, vitesse);
+            Braccio.moveMotor(BASE, 10, speed);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.mainFermee(vitesse);
+            Braccio.closeGripper(posGripper, speed);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.leverMain(80, vitesse);
+            Braccio.moveMotor(WRIST_ROT, 80, speed);
             ATTENTE
             delay(100);
             ATTENTE
@@ -703,15 +691,15 @@ void colere()
     
         else 
         {
-            Braccio.tournerBase(160, vitesse);
+            Braccio.moveMotor(BASE, 160, speed);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.mainOuverte(vitesse);
+            Braccio.openGripper(posGripper,speed);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.leverMain(60, vitesse);
+            Braccio.moveMotor(WRIST_ROT, 60, speed);
             ATTENTE
             delay(100);
         }
@@ -719,27 +707,27 @@ void colere()
         delay(50);
     }
   
-    Braccio.tournerBase(90, LENT);
+    Braccio.moveMotor(BASE, 90, LENT);
     ATTENTE
     delay(10);
-    Braccio.mainFermee(MOYEN);
+    Braccio.closeGripper(posGripper, MOYEN);
     ATTENTE
     delay(10);
-    Braccio.tournerEpaule(60, LENT);
+    Braccio.moveMotor(SHOULDER, 60, LENT);
     ATTENTE
     delay(10);
-    Braccio.tournerCoude(170, LENT);
+    Braccio.moveMotor(ELBOW, 170, LENT);
     ATTENTE
     delay(10);
-    Braccio.leverMain(20, LENT);
+    Braccio.moveMotor(WRIST_ROT, 20, LENT);
     ATTENTE
     delay(100);
   
-    Braccio.ServoMovement(RAPIDE, posBase, 70, 70, 60, 90, 90);
+    Braccio.moveAll(posBase, 70, 70, 60, 90, 90, RAPIDE);
     ATTENTE
     
     delay(1000);
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
   
     duree = millis() - tempsDebut;
     Serial.print("Temps d'execution de colere = ");
@@ -754,129 +742,129 @@ void colere()
 void joie()
 {
     tempsDebut = millis();
-    vitesse = RAPIDE;
+    speed = RAPIDE;
   
-    Braccio.tournerEpaule(140, MOYEN);
+    Braccio.moveMotor(SHOULDER, 140, MOYEN);
     ATTENTE
     delay(100);
     ATTENTE
-    Braccio.tournerCoude(40, vitesse);
+    Braccio.moveMotor(ELBOW, 40, speed);
     ATTENTE
     delay(100);
     ATTENTE
   
     for (i = 0; i < 4; i++)
     {
-        Braccio.leverMain(150, vitesse);
+        Braccio.moveMotor(WRIST_ROT, 150, speed);
         ATTENTE
         delay(50);
-        Braccio.leverMain(40, vitesse);
+        Braccio.moveMotor(WRIST_ROT, 40, speed);
         ATTENTE
         delay(50);
     }
 
     ATTENTE
     delay(1000);
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
   
-    Braccio.leverMain(90, vitesse);
+    Braccio.moveMotor(WRIST_ROT, 90, speed);
     ATTENTE
-    Braccio.tournerBase(170, RAPIDE);
+    Braccio.moveMotor(BASE, 170, RAPIDE);
     ATTENTE
-    Braccio.ServoMovement(RAPIDE, 170, posEpaule, posCoude, 90, posPoignetVer, posPince);
+    Braccio.moveAll(170, posShoulder, posElbow, 90, posWristVer, posGripper, RAPIDE);
     ATTENTE
     delay(50);
     ATTENTE
-    Braccio.ServoMovement(RAPIDE, 30, posEpaule, posCoude, 40, posPoignetVer, posPince);
+    Braccio.moveAll(30, posShoulder, posElbow, 40, posWristVer, posGripper, RAPIDE);
     ATTENTE
     delay(50);
   
     for (i = 0; i < 2; i++)
     {
-        Braccio.tournerBase(150, RAPIDE);
+        Braccio.moveMotor(BASE, 150, RAPIDE);
         ATTENTE
         delay(25);
         ATTENTE
-        Braccio.tournerEpaule(60, MOYEN);
+        Braccio.moveMotor(SHOULDER, 60, MOYEN);
         ATTENTE
         delay(25);
         ATTENTE
-        Braccio.tournerCoude(150, vitesse);
+        Braccio.moveMotor(ELBOW, 150, speed);
         ATTENTE
         delay(250);
         ATTENTE
-        Braccio.leverMain(60, vitesse);
+        Braccio.moveMotor(WRIST_ROT, 60, speed);
         ATTENTE
         delay(25);
         ATTENTE
       
-        Braccio.tournerBase(40, RAPIDE);
+        Braccio.moveMotor(BASE, 40, RAPIDE);
         ATTENTE
         delay(25);
         ATTENTE
-        Braccio.leverMain(110, vitesse);
+        Braccio.moveMotor(WRIST_ROT, 110, speed);
         ATTENTE
         delay(250);
         ATTENTE
-        Braccio.tournerCoude(40, vitesse);
+        Braccio.moveMotor(ELBOW, 40, speed);
         ATTENTE
         delay(25);
         ATTENTE
-        Braccio.tournerEpaule(130, MOYEN);
+        Braccio.moveMotor(SHOULDER, 130, MOYEN);
         ATTENTE
         delay(25);
     }
   
-    Braccio.tournerBase(90, vitesse);
+    Braccio.moveMotor(BASE, 90, speed);
     ATTENTE
-    Braccio.tournerEpaule(140, MOYEN);
+    Braccio.moveMotor(SHOULDER, 140, MOYEN);
     ATTENTE
     delay(25);
     ATTENTE
-    Braccio.tournerCoude(40, RAPIDE);
+    Braccio.moveMotor(ELBOW, 40, RAPIDE);
     ATTENTE
     delay(25);
   
     for (i = 0; i < 3; i++)
     {
-        Braccio.mainOuverte(RAPIDE);
+        Braccio.openGripper(posGripper,RAPIDE);
         ATTENTE
         delay(50);
         ATTENTE
-        Braccio.mainFermee(RAPIDE);
+        Braccio.closeGripper(posGripper, RAPIDE);
         ATTENTE
         delay(50);
         ATTENTE
     }
   
-    Braccio.ouvrirPince(90, MOYEN);
+    Braccio.moveMotor(GRIPPER, 90, MOYEN);
     ATTENTE
   
     for (i = 0; i < 3; i++)
     {
-        Braccio.tournerBase(40, RAPIDE);
+        Braccio.moveMotor(BASE, 40, RAPIDE);
         ATTENTE
         delay(20);
         ATTENTE
-        Braccio.tournerBase(140, RAPIDE);
+        Braccio.moveMotor(BASE, 140, RAPIDE);
         ATTENTE
         delay(20);
         ATTENTE
     }
   
-    Braccio.tournerBase(90, vitesse);
+    Braccio.moveMotor(BASE, 90, speed);
     ATTENTE
     delay(200);
     ATTENTE
   
     for(i = 0; i < 2; i++)
     {
-        Braccio.ServoMovement(RAPIDE, posBase, 140, 25, 150, posPoignetVer, posPince);
+        Braccio.moveAll(posBase, 140, 25, 150, posWristVer, posGripper, RAPIDE);
         ATTENTE
         delay(200);
         ATTENTE
-        Braccio.ServoMovement(RAPIDE, posBase, 50, 175, 40, posPoignetVer, posPince);
+        Braccio.moveAll(posBase, 50, 175, 40, posWristVer, posGripper, RAPIDE);
         ATTENTE
         delay(200);
         ATTENTE
@@ -884,7 +872,7 @@ void joie()
   
     delay(1000);
     ATTENTE
-    Braccio.positionDroite();
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
     ATTENTE
   
     duree = millis() - tempsDebut;
@@ -899,22 +887,22 @@ void joie()
 // ---------------------------------------- //
 void vague()
 {
-    vitesse = T_RAPIDE;
-    Braccio.positionDroite();
+    speed = T_RAPIDE;
+    Braccio.stand(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper);
   
-    posCoude = 135;
-    posPoignetRot = 180;
-    Braccio.ServoMovement(vitesse, posBase, posEpaule, posCoude, posPoignetRot, posPoignetVer, posPince);
+    posElbow = 135;
+    posWristRot = 180;
+    Braccio.moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper, speed);
   
-    byte coude = posCoude;
-    byte poignetRot = posPoignetRot;
-    posCoude = 180;
-    posPoignetRot = 40;
-    while ( coude < posCoude || poignetRot > posPoignetRot)
+    byte coude = posElbow;
+    byte poignetRot = posWristRot;
+    posElbow = 180;
+    posWristRot = 40;
+    while ( coude < posElbow || poignetRot > posWristRot)
     {
         //delay(100);
         coude++; 
         poignetRot--;
-        Braccio.ServoMovement(vitesse, posBase, posEpaule, coude, poignetRot, posPoignetVer, posPince);
+        Braccio.moveAll(posBase, posShoulder, coude, poignetRot, posWristVer, posGripper, speed);
     }
 }

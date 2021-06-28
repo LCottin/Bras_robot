@@ -8,12 +8,18 @@
 #include <RF24.h>
 #include <RF24Network.h>
 
+/**
+    Numéro de l'émetteur à modifier :
+      Emetteur 1 : 1
+      Emetteur 2 : 2
+      Emetteur 3 : 3
+*/
 #define EMETTEUR 1
 
 #if EMETTEUR == 3
-  RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
+    RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
 #else
-  RF24 radio(9,10); //emission avec Arduino Nano-rf
+    RF24 radio(9,10); //emission avec Arduino Nano-rf
 #endif
 
 RF24Network network(radio);   // Nota : "Network" utilise la librairie "radio"
@@ -108,10 +114,10 @@ void loop()
 // ---------------------------------------- //
 void initMoyennage()
 {
-  for(byte i = 0; i < NB_MOYENNAGE; i++)
+    for(byte i = 0; i < NB_MOYENNAGE; i++)
     {
-      X[i] = 300;
-      Y[i] = 300;
+        X[i] = 300;
+        Y[i] = 300;
     }
 }
 

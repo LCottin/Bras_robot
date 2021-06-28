@@ -9,22 +9,23 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
+#define TELECOMMANDE 4 //télécommande (emetteur numéro 4)
+
 RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
 //RF24 radio(9,10); //emission avec Arduino Nano-rf
-
-#define TELECOMMANDE 4 //télécommande (emetteur numéro 4)
 
 //init Réseau
 RF24Network network(radio); 
 const byte noeudMere  = 00; // Valeur "0" écrit au format "octal" (d'où l'autre "0" devant)
 const byte monNoeud   = 04;
 
+//init affichage graphique
 U8G2_SSD1306_128X64_NONAME_2_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
 
 //Pins des boutons
-enum BOUTON {PIN_HAUT = 2, PIN_BAS = 3, PIN_PLAY = 4, PIN_PAUSE = 5, PIN_STOP = 6};
+enum BOUTON {PIN_HAUT = 6, PIN_BAS = 5, PIN_PLAY = 3, PIN_PAUSE = 2, PIN_STOP = 4};
 
-//Interéaction avec l'écran
+//Interaction avec l'écran
 const byte NOMBRE_ORDRES = 4;
 short numOrdre = 3; 
 
@@ -71,12 +72,13 @@ void setup()
     u8g2.enableUTF8Print();
     
     u8g2.firstPage();
-    do {
-      u8g2.setFont(u8g2_font_ncenB14_tr);
-      u8g2.drawStr(20, 40, "Init ...");
-      delay(500);
+    do 
+    {
+        u8g2.setFont(u8g2_font_ncenB14_tr);
+        u8g2.drawStr(20, 40, "Init ...");
     } while (u8g2.nextPage());
-    
+
+    delay(1000);
     u8g2.clear();
 }
 
@@ -94,12 +96,12 @@ void loop()
         
         while (digitalRead(PIN_HAUT) == HIGH)
         {
-          u8g2.firstPage();
-          do 
-          {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-          } while (u8g2.nextPage());
+            u8g2.firstPage();
+            do 
+            {
+              u8g2.setFont(u8g2_font_ncenB14_tr);
+              u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+            } while (u8g2.nextPage());
         }
         u8g2.clear();
     }
@@ -113,12 +115,12 @@ void loop()
         
         while (digitalRead(PIN_BAS) == HIGH)
         { 
-          u8g2.firstPage();
-          do 
-          {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-          } while (u8g2.nextPage());
+            u8g2.firstPage();
+            do 
+            {
+              u8g2.setFont(u8g2_font_ncenB14_tr);
+              u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+            } while (u8g2.nextPage());
         }
         u8g2.clear();
     }
@@ -128,13 +130,13 @@ void loop()
         u8g2.clear();
         while (digitalRead(PIN_PLAY) == HIGH)
         {
-          u8g2.firstPage();
-          do 
-          {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(10, 20, "Play : ");
-            u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-          } while (u8g2.nextPage());
+            u8g2.firstPage();
+            do 
+            {
+                u8g2.setFont(u8g2_font_ncenB14_tr);
+                u8g2.drawStr(10, 20, "Play : ");
+                u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+            } while (u8g2.nextPage());
         }
         send_data.mode = ordre[numOrdre];
         send_data._action = PLAY;
@@ -144,28 +146,34 @@ void loop()
     else if (digitalRead(PIN_PAUSE) == HIGH)
     {
         u8g2.clear();
-        
-          u8g2.firstPage();
-          do 
-          {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(10, 50, "Pause");
-          } while (u8g2.nextPage());
-          send_data._action = PAUSE;
+
+        while(digitalRead(PIN_PAUSE) == HIGH)
+        {
+            u8g2.firstPage();
+            do 
+            {
+                u8g2.setFont(u8g2_font_ncenB14_tr);
+                u8g2.drawStr(10, 50, "Pause");
+            } while (u8g2.nextPage());
+        }
+        send_data._action = PAUSE;
     }
     
     else if (digitalRead(PIN_STOP) == HIGH)
     {
         u8g2.clear();
-        
-          u8g2.firstPage();
-          do 
-          {
-            u8g2.setFont(u8g2_font_ncenB14_tr);
-            u8g2.drawStr(10, 50, "STOP");
-          } while (u8g2.nextPage());
-          send_data.mode = RIEN;
-          send_data._action = STOP;
+
+        while (digitalRead(PIN_STOP) == HIGH)
+        {
+            u8g2.firstPage();
+            do 
+            {
+                u8g2.setFont(u8g2_font_ncenB14_tr);
+                u8g2.drawStr(10, 50, "STOP");
+            } while (u8g2.nextPage());
+        }
+        send_data.mode = RIEN;
+        send_data._action = STOP;
         
         u8g2.clear();
     }
@@ -174,38 +182,38 @@ void loop()
     {
         switch (send_data._action)
         {
-          case PLAY :
-            u8g2.firstPage();
-            do 
-            {
-              u8g2.setFont(u8g2_font_ncenB14_tr);
-              u8g2.drawStr(10, 20, "En cours : ");
-              u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
-            } while (u8g2.nextPage());
-            break;
-
-            case STOP :
-              u8g2.firstPage();
-              do 
-              {
-                u8g2.setFont(u8g2_font_ncenB14_tr);
-                u8g2.drawStr(10, 50, "STOP !");
-              } while (u8g2.nextPage());
-              break;
-
-            case PAUSE :
-              u8g2.firstPage();
-              do 
-              {
-                u8g2.setFont(u8g2_font_ncenB14_tr);
-                u8g2.drawStr(10, 50, "PAUSE !");
-              } while (u8g2.nextPage());
-              break;
-        }
+            case PLAY :
+                u8g2.firstPage();
+                do 
+                {
+                    u8g2.setFont(u8g2_font_ncenB14_tr);
+                    u8g2.drawStr(10, 20, "En cours : ");
+                    u8g2.drawStr(10, 50, ordreTexte[numOrdre]);
+                } while (u8g2.nextPage());
+                break;
+  
+              case STOP :
+                  u8g2.firstPage();
+                  do 
+                  {
+                      u8g2.setFont(u8g2_font_ncenB14_tr);
+                      u8g2.drawStr(10, 50, "STOP !");
+                  } while (u8g2.nextPage());
+                  break;
+  
+              case PAUSE :
+                  u8g2.firstPage();
+                  do 
+                  {
+                      u8g2.setFont(u8g2_font_ncenB14_tr);
+                      u8g2.drawStr(10, 50, "PAUSE !");
+                  } while (u8g2.nextPage());
+                  break;
+          }
     }
 
     //envoie sur le réseau
     RF24NetworkHeader nHeader(noeudMere);
     network.write(nHeader, &send_data, sizeof(send_data));
-    delay(100);
+    delay(10);
 }

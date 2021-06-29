@@ -61,7 +61,7 @@ struct data
     char _action;
 } received_data;
 
-// valeurs à envoyer à la Uno-Braccio
+// valeurs à envoyer au bras
 struct dataToSend
 {
   short posBase     = vMax.XMOY;
@@ -110,7 +110,7 @@ short i;
 bool droit = true;
 
 //definition de la vitesse des moteurs
-SPEED speed;
+SPEED speedMove;
 
 //Pour mesurer le temps d'execution d'un programme
 unsigned long tempsDebut;
@@ -149,6 +149,7 @@ void setup()
 
     //init network
     network.begin(108, monNoeud);
+    Serial.println("Pret !");
 }
 
 
@@ -157,7 +158,7 @@ void setup()
 // ---------------------------------------- //
 void loop() 
 {
-      speed  = T_RAPIDE;
+      speedMove  = T_RAPIDE;
       _pauseGlobal = false;
       _stopGlobal = false;
       
@@ -172,21 +173,25 @@ void loop()
           switch (received_data.mode)
           { 
             case COLERE : 
+              Serial.println("Colère");
               colere();
               droit = false;
               break;
     
-            case JOIE :  
+            case JOIE :
+              Serial.println("Joie");  
               joie();
               droit = false;
               break;
     
             case SURPRISE : 
+              Serial.println("Surprise");
               surprise();
               droit = false;
               break;
     
             case CONTROLE :
+              Serial.println("Controle");
               local_data._action = received_data._action;
               switch (received_data.id)
               {
@@ -207,7 +212,7 @@ void loop()
               }
               miseEnForme();
               droit = false;
-              Braccio.moveAll(baseControle, shoulderControle, elbowControle, wristRotControle, wristVerControle, gripperControle, speed);
+              Braccio.moveAll(baseControle, shoulderControle, elbowControle, wristRotControle, wristVerControle, gripperControle, speedMove);
               break;
     
             case RIEN : 
@@ -358,7 +363,7 @@ int compare (const void * a, const void * b)
 void surprise()
 {
     tempsDebut = millis();
-    speed = RAPIDE;
+    speedMove = RAPIDE;
 
     //return en cas de stop, attend en cas de pause
     ATTENTE
@@ -367,39 +372,39 @@ void surprise()
     
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 180, speed);
+    Braccio.moveMotor(WRIST_VER, 180, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 90, speed);
+    Braccio.moveMotor(WRIST_VER, 90, speedMove);
     ATTENTE
     delay(500);
   
     ATTENTE
     
-    Braccio.moveMotor(WRIST_ROT, 20, speed);
+    Braccio.moveMotor(WRIST_ROT, 20, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    Braccio.moveMotor(WRIST_ROT, 90, speedMove);
     ATTENTE
     delay(500);
 
     ATTENTE
   
-    Braccio.moveMotor(ELBOW, 20, speed);
+    Braccio.moveMotor(ELBOW, 20, speedMove);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    Braccio.moveMotor(WRIST_ROT, 180, speedMove);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(BASE, 60, speed);
+    Braccio.moveMotor(BASE, 60, speedMove);
     ATTENTE
     delay(500);
 
@@ -431,53 +436,53 @@ void surprise()
 // ---------------------------------------- //
 void test1()
 {
-    speed = T_LENT;
+    speedMove = T_LENT;
     Serial.println("Changement");
     Braccio.resetPos();
     ATTENTE
-    Braccio.openGripper(speed);
+    Braccio.openGripper(speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.closeGripper(speed);
+    Braccio.closeGripper(speedMove);
     ATTENTE
     delay(500);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 180, speed);
+    Braccio.moveMotor(WRIST_VER, 180, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 90, speed);
-    ATTENTE
-    delay(500);
-    ATTENTE
-  
-    Braccio.moveMotor(WRIST_ROT, 20, speed);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    Braccio.moveMotor(WRIST_VER, 90, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.moveMotor(ELBOW, 20, speed);
+    Braccio.moveMotor(WRIST_ROT, 20, speedMove);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
+    ATTENTE
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 90, speedMove);
+    ATTENTE
+    delay(500);
+    ATTENTE
+  
+    Braccio.moveMotor(ELBOW, 20, speedMove);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 180, speedMove);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(BASE, 60, speed);
+    Braccio.moveMotor(BASE, 60, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
@@ -486,51 +491,51 @@ void test1()
     Braccio.stand();
 
     delay(1000);
-    speed = MOYEN;
+    speedMove = MOYEN;
     ATTENTE
     Braccio.resetPos();
     ATTENTE
-    Braccio.openGripper(speed);
+    Braccio.openGripper(speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.closeGripper(speed);
+    Braccio.closeGripper(speedMove);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 180, speed);
+    Braccio.moveMotor(WRIST_VER, 180, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 90, speed);
+    Braccio.moveMotor(WRIST_VER, 90, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.moveMotor(WRIST_ROT, 20, speed);
+    Braccio.moveMotor(WRIST_ROT, 20, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    Braccio.moveMotor(WRIST_ROT, 90, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.moveMotor(ELBOW, 20, speed);
+    Braccio.moveMotor(ELBOW, 20, speedMove);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    Braccio.moveMotor(WRIST_ROT, 180, speedMove);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(BASE, 60, speed);
+    Braccio.moveMotor(BASE, 60, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
@@ -542,55 +547,55 @@ void test1()
     delay(2000);
     ATTENTE
   
-    speed = T_RAPIDE;
+    speedMove = T_RAPIDE;
     ATTENTE
     Serial.println("Changement");
     ATTENTE
     Braccio.resetPos();
     ATTENTE
-    Braccio.openGripper(speed);
+    Braccio.openGripper(speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.closeGripper(speed);
+    Braccio.closeGripper(speedMove);
     ATTENTE
     delay(500);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 180, speed);
+    Braccio.moveMotor(WRIST_VER, 180, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
-    Braccio.moveMotor(WRIST_VER, 90, speed);
-    ATTENTE
-    delay(500);
-    ATTENTE
-  
-    Braccio.moveMotor(WRIST_ROT, 20, speed);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.moveMotor(WRIST_VER, 0, speed);
-    ATTENTE
-    delay(500);
-    ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    Braccio.moveMotor(WRIST_VER, 90, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
   
-    Braccio.moveMotor(ELBOW, 20, speed);
+    Braccio.moveMotor(WRIST_ROT, 20, speedMove);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 180, speed);
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_VER, 0, speedMove);
+    ATTENTE
+    delay(500);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 90, speedMove);
+    ATTENTE
+    delay(500);
+    ATTENTE
+  
+    Braccio.moveMotor(ELBOW, 20, speedMove);
+    ATTENTE
+    Braccio.moveMotor(WRIST_ROT, 180, speedMove);
     ATTENTE
     Braccio.stand();
     ATTENTE
-    Braccio.moveMotor(BASE, 60, speed);
+    Braccio.moveMotor(BASE, 60, speedMove);
     ATTENTE
     delay(500);
     ATTENTE
@@ -606,69 +611,72 @@ void test1()
 void colere()
 {
     tempsDebut = millis();
-    speed = MOYEN;
+    speedMove = MOYEN;
   
     Braccio.moveMotor(SHOULDER, 150, MOYEN);
     ATTENTE
     delay(10);
     ATTENTE
-    Braccio.moveAll(posBase, 90, 20, 180, posWristVer, posGripper, speed);
+    Braccio.moveAll(posBase, 90, 20, 180, posWristVer, posGripper, speedMove);
     ATTENTE
     delay(20);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 115, speed);
+    Braccio.moveMotor(WRIST_ROT, 115, speedMove);
     ATTENTE
     delay(10);
     ATTENTE
-  
+
     for (i = 0; i < 3; i++)
     {
-        Braccio.openGripper(speed);
+        Serial.println("ici");
+        Braccio.openGripper(speedMove);
         ATTENTE
         delay(10);
         ATTENTE
-        Braccio.closeGripper(speed);
+        Braccio.closeGripper(speedMove);
         ATTENTE
         delay(10);
         ATTENTE
     }
-    Braccio.moveMotor(GRIPPER, 90, speed);
+        
+    Braccio.moveMotor(GRIPPER, 90, speedMove);
     ATTENTE
-    
-    Braccio.moveMotor(SHOULDER, 30, speed);
+
+    Braccio.moveMotor(ELBOW, 110, speedMove);
+    Braccio.moveMotor(SHOULDER, 30, speedMove);
     ATTENTE
     delay(10);
-    Braccio.moveAll(posBase, 140, 95, 95, 90, 90, speed);
+    Braccio.moveAll(posBase, 140, 95, 95, 90, 90, speedMove);
     ATTENTE
     delay(30);
-    Braccio.moveAll(30, 110, 80, 150, 90, 90, speed);
+    Braccio.moveAll(30, 110, 80, 150, 90, 90, speedMove);
     ATTENTE
     delay(30);
-    Braccio.moveAll(90, 70, 60, 90, 90, 90, speed);
+    Braccio.moveAll(90, 70, 60, 90, 90, 90, speedMove);
     ATTENTE
     delay(30);
-    Braccio.moveAll(120, 30, 90, 90, 90, 90, speed);
+    Braccio.moveAll(120, 30, 90, 90, 90, 90, speedMove);
     ATTENTE
     delay(100);
   
-    Braccio.moveMotor(SHOULDER, 160, speed);
+    Braccio.moveMotor(SHOULDER, 160, speedMove);
     ATTENTE
     delay(10);
-    Braccio.moveMotor(WRIST_ROT, 150, speed);
+    Braccio.moveMotor(WRIST_ROT, 150, speedMove);
     ATTENTE
     delay(50);
-    Braccio.moveAll(posBase, 140, 95, 95, 90, 90, speed);
+    Braccio.moveAll(posBase, 140, 95, 95, 90, 90, speedMove);
     ATTENTE
   
-    Braccio.moveMotor(SHOULDER, 95, speed);
+    Braccio.moveMotor(SHOULDER, 95, speedMove);
     ATTENTE
     delay(10);
     ATTENTE
-    Braccio.moveMotor(ELBOW, 95, speed);
+    Braccio.moveMotor(ELBOW, 95, speedMove);
     ATTENTE
     delay(10);
     ATTENTE
-    Braccio.moveMotor(WRIST_ROT, 10, speed);
+    Braccio.moveMotor(WRIST_ROT, 10, speedMove);
     ATTENTE
     delay(10);
   
@@ -676,15 +684,15 @@ void colere()
     {
         if (i%2)
         {
-            Braccio.moveMotor(BASE, 10, speed);
+            Braccio.moveMotor(BASE, 10, speedMove);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.closeGripper(speed);
+            Braccio.closeGripper(speedMove);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.moveMotor(WRIST_ROT, 80, speed);
+            Braccio.moveMotor(WRIST_ROT, 80, speedMove);
             ATTENTE
             delay(100);
             ATTENTE
@@ -692,15 +700,15 @@ void colere()
     
         else 
         {
-            Braccio.moveMotor(BASE, 160, speed);
+            Braccio.moveMotor(BASE, 160, speedMove);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.openGripper(speed);
+            Braccio.openGripper(speedMove);
             ATTENTE
             delay(10);
             ATTENTE
-            Braccio.moveMotor(WRIST_ROT, 60, speed);
+            Braccio.moveMotor(WRIST_ROT, 60, speedMove);
             ATTENTE
             delay(100);
         }
@@ -743,23 +751,23 @@ void colere()
 void joie()
 {
     tempsDebut = millis();
-    speed = RAPIDE;
+    speedMove = RAPIDE;
   
     Braccio.moveMotor(SHOULDER, 140, MOYEN);
     ATTENTE
     delay(100);
     ATTENTE
-    Braccio.moveMotor(ELBOW, 40, speed);
+    Braccio.moveMotor(ELBOW, 40, speedMove);
     ATTENTE
     delay(100);
     ATTENTE
   
     for (i = 0; i < 4; i++)
     {
-        Braccio.moveMotor(WRIST_ROT, 150, speed);
+        Braccio.moveMotor(WRIST_ROT, 150, speedMove);
         ATTENTE
         delay(50);
-        Braccio.moveMotor(WRIST_ROT, 40, speed);
+        Braccio.moveMotor(WRIST_ROT, 40, speedMove);
         ATTENTE
         delay(50);
     }
@@ -769,7 +777,7 @@ void joie()
     Braccio.stand();
     ATTENTE
   
-    Braccio.moveMotor(WRIST_ROT, 90, speed);
+    Braccio.moveMotor(WRIST_ROT, 90, speedMove);
     ATTENTE
     Braccio.moveMotor(BASE, 170, RAPIDE);
     ATTENTE
@@ -791,11 +799,11 @@ void joie()
         ATTENTE
         delay(25);
         ATTENTE
-        Braccio.moveMotor(ELBOW, 150, speed);
+        Braccio.moveMotor(ELBOW, 150, speedMove);
         ATTENTE
         delay(250);
         ATTENTE
-        Braccio.moveMotor(WRIST_ROT, 60, speed);
+        Braccio.moveMotor(WRIST_ROT, 60, speedMove);
         ATTENTE
         delay(25);
         ATTENTE
@@ -804,11 +812,11 @@ void joie()
         ATTENTE
         delay(25);
         ATTENTE
-        Braccio.moveMotor(WRIST_ROT, 110, speed);
+        Braccio.moveMotor(WRIST_ROT, 110, speedMove);
         ATTENTE
         delay(250);
         ATTENTE
-        Braccio.moveMotor(ELBOW, 40, speed);
+        Braccio.moveMotor(ELBOW, 40, speedMove);
         ATTENTE
         delay(25);
         ATTENTE
@@ -817,7 +825,7 @@ void joie()
         delay(25);
     }
   
-    Braccio.moveMotor(BASE, 90, speed);
+    Braccio.moveMotor(BASE, 90, speedMove);
     ATTENTE
     Braccio.moveMotor(SHOULDER, 140, MOYEN);
     ATTENTE
@@ -854,7 +862,7 @@ void joie()
         ATTENTE
     }
   
-    Braccio.moveMotor(BASE, 90, speed);
+    Braccio.moveMotor(BASE, 90, speedMove);
     ATTENTE
     delay(200);
     ATTENTE
@@ -888,12 +896,12 @@ void joie()
 // ---------------------------------------- //
 void vague()
 {
-    speed = T_RAPIDE;
+    speedMove = T_RAPIDE;
     Braccio.stand();
   
     posElbow = 135;
     posWristRot = 180;
-    Braccio.moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper, speed);
+    Braccio.moveAll(posBase, posShoulder, posElbow, posWristRot, posWristVer, posGripper, speedMove);
   
     byte coude = posElbow;
     byte poignetRot = posWristRot;
@@ -904,6 +912,6 @@ void vague()
         //delay(100);
         coude++; 
         poignetRot--;
-        Braccio.moveAll(posBase, posShoulder, coude, poignetRot, posWristVer, posGripper, speed);
+        Braccio.moveAll(posBase, posShoulder, coude, poignetRot, posWristVer, posGripper, speedMove);
     }
 }

@@ -11,8 +11,8 @@
 
 #define TELECOMMANDE 4 //télécommande (emetteur numéro 4)
 
-RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
-//RF24 radio(9,10); //emission avec Arduino Nano-rf
+//RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
+RF24 radio(9,10); //emission avec Arduino Nano-rf
 
 //init Réseau
 RF24Network network(radio); 

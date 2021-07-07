@@ -324,7 +324,7 @@ void miseEnForme()
     
     //affecte les positions des moteurs avec un mapping
     baseControle       = map(moyenneX1, vMax.XMIN, vMax.XMAX, 0, 180);
-    shoulderControle   = 6 + map(moyenneY1, vMax.YMIN, vMax.YMAX, 20, 160);
+    shoulderControle   = map(moyenneY1, vMax.YMIN, vMax.YMAX, 20, 160);
     elbowControle      = map(moyenneX2, vMax.XMIN, vMax.XMAX, 0, 180);
     wristRotControle   = map(moyenneY2, vMax.YMIN, vMax.YMAX, 0, 180);
     wristVerControle   = map(moyenneX3, vMax.XMIN, vMax.XMAX, 0, 180);
@@ -643,6 +643,7 @@ void colere()
     ATTENTE
 
     Braccio.moveMotor(ELBOW, 110, speedMove);
+    ATTENTE
     Braccio.moveMotor(SHOULDER, 30, speedMove);
     ATTENTE
     delay(10);

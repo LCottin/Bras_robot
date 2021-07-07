@@ -10,17 +10,13 @@
 
 /**
     Numéro de l'émetteur à modifier :
-      Emetteur 1 : 1
-      Emetteur 2 : 2
-      Emetteur 3 : 3
+      Emetteur 1 : 1 (base / épaule)
+      Emetteur 2 : 2 (coude / poignet rot)
+      Emetteur 3 : 3 (poignet ver / pince)
 */
-#define EMETTEUR 1
+#define EMETTEUR 3
 
-#if EMETTEUR == 3
-    RF24 radio(7,8); //emission avec Arduino Nano + NRF24l01
-#else
-    RF24 radio(9,10); //emission avec Arduino Nano-rf
-#endif
+RF24 radio(9,10); //emission avec Arduino Nano-rf
 
 RF24Network network(radio);   // Nota : "Network" utilise la librairie "radio"
 
